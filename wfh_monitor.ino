@@ -127,6 +127,7 @@ void setup() {
 
 
     // startup
+    delay(1000); // por時間を考慮しとく
     ms4ReadFwVersion(Wire);
     ms4StartScan(Wire);
 
