@@ -106,31 +106,12 @@ void ms4ReadFwVersion(TwoWire& wire) {
 }
 
 void ms4StartScan(TwoWire& wire) {
-    M5.Lcd.print("Start Scan...");
-    // { Reserved, GAS, BATT, AUD, LIGHT, HUM, TEMP, STATUS }
-    uint8_t errorCode = i2cWriteReg(wire, I2C_SLAVE_ADDR_MS4, 0xc0, 0x7f);
-    if (errorCode != 0) {
-        M5.Lcd.setTextColor(RED);
-        M5.Lcd.print(" Error: ");
-        M5.Lcd.print(errorCode);
-        while(true) {}
-    }
-    M5.Lcd.println(" Done");
-    M5.Lcd.print("Start Verify...");
-
-    uint8_t data = 0x0;
-    errorCode = i2cReadReg(wire, I2C_SLAVE_ADDR_MS4, 0xc3, &data, 1);
-    if ((errorCode != 0) || (data != 0x7f)) {
-        M5.Lcd.setTextColor(RED);
-        M5.Lcd.print("\nError code:");
-        M5.Lcd.print(errorCode);
-        M5.Lcd.print(" data: ");
-        M5.Lcd.print(data);
-        while(true) {}
-    }
 }
 
 void setup() {
+    // M5StickC initialize
+    M5.begin();
+
     // LCD config
     M5.Lcd.begin();
     M5.Lcd.setRotation(3);
@@ -158,23 +139,35 @@ void setup() {
 
 static int textColor = GREEN;
 void loop() {
-    uint8_t readBuf[16] = {};
-    const uint8_t  errorCode = i2cReadReg(Wire, I2C_SLAVE_ADDR_MS4, 0x00, readBuf, 16);
-    if (errorCode != 0) {
+    // startScan
+    // 0xc0 SCAN_START_BYTE: { Reserved, GAS, BATT, AUD, LIGHT, HUM, TEMP, STATUS }
+    const uint8_t scanError = i2cWriteReg(Wire, I2C_SLAVE_ADDR_MS4, 0xc0, 0x7f);
+    if (scanError != 0) {
         M5.Lcd.setTextColor(RED);
-        M5.Lcd.print("Error: ");
-        M5.Lcd.print(errorCode);
+        M5.Lcd.print("ScanStart Error: ");
+        M5.Lcd.print(scanError);
+        while(true) {}
+    }
+    delay(100);
+
+    // read DataRegs
+    uint8_t readBuf[15] = {};
+    const uint8_t readError = i2cReadReg(Wire, I2C_SLAVE_ADDR_MS4, 0x00, readBuf, 15);
+    if (readError != 0) {
+        M5.Lcd.setTextColor(RED);
+        M5.Lcd.print("DataRead Error: ");
+        M5.Lcd.print(readError);
         while(true) {}
     }
 
     const uint8_t  status      = readBuf[0];
-    const uint16_t temperature = (readBuf[0x1] << 8) & readBuf[0x2];
-    const uint16_t humidity    = (readBuf[0x3] << 8) & readBuf[0x4];
-    const uint16_t light       = (readBuf[0x5] << 8) & readBuf[0x6];
-    const uint16_t audio       = (readBuf[0x7] << 8) & readBuf[0x8];
-    const uint16_t battery     = (readBuf[0x9] << 8) & readBuf[0xa];
-    const uint16_t co2         = (readBuf[0xb] << 8) & readBuf[0xc];
-    const uint16_t voc         = (readBuf[0xd] << 8) & readBuf[0xe];
+    const uint16_t temperature = (readBuf[0x1] << 8) | readBuf[0x2];
+    const uint16_t humidity    = (readBuf[0x3] << 8) | readBuf[0x4];
+    const uint16_t light       = (readBuf[0x5] << 8) | readBuf[0x6];
+    const uint16_t audio       = (readBuf[0x7] << 8) | readBuf[0x8];
+    const uint16_t battery     = (readBuf[0x9] << 8) | readBuf[0xa];
+    const uint16_t co2         = (readBuf[0xb] << 8) | readBuf[0xc];
+    const uint16_t voc         = (readBuf[0xd] << 8) | readBuf[0xe];
 
     const float temperatureVal = (temperature / 10.0f);
     const float humidityVal    = (humidity / 10.0f);
@@ -182,21 +175,24 @@ void loop() {
 
     // 適当に表示しておく
     textColor = (textColor == GREEN) ? ORANGE : GREEN;
+    M5.Lcd.fillScreen(BLACK);
     M5.Lcd.setCursor(0, 0);
     M5.Lcd.setTextColor(textColor);
 
     M5.Lcd.print("temp:");
-    M5.Lcd.println(temperature);
-    M5.Lcd.print("humidity:");
-    M5.Lcd.println(humidity);
+    M5.Lcd.println(temperatureVal);
+    M5.Lcd.print("humi:");
+    M5.Lcd.println(humidityVal);
     M5.Lcd.print("light:");
     M5.Lcd.println(light);
     M5.Lcd.print("audio:");
     M5.Lcd.println(audio);
     M5.Lcd.print("battery:");
-    M5.Lcd.println(battery);
+    M5.Lcd.println(batteryVal);
     M5.Lcd.print("co2:");
     M5.Lcd.println(co2);
     M5.Lcd.print("voc:");
     M5.Lcd.println(voc);
+
+    delay(100);
 }
