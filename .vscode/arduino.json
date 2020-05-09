@@ -1,7 +1,7 @@
 {
-    "sketch": "wfh_monitor.ino",
+    "port": "COM9",
     "board": "esp32:esp32:m5stick-c",
     "configuration": "PartitionScheme=default,UploadSpeed=1500000,DebugLevel=none",
-    "port": "COM9",
-    "programmer": "AVRISP mkII"
+    "programmer": "AVRISP mkII",
+    "sketch": "wfh_monitor.ino"
 }
