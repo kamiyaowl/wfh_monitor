@@ -18,6 +18,23 @@ uint8_t i2cReadReg(TwoWire& wire, uint8_t slaveAddr, uint8_t regAddr, uint8_t* r
         return 0;
     }
 
+    for (uint8_t i = 0; i < readByteCount; i++) {
+        // Write regAddr for read
+        wire.beginTransmission(slaveAddr);
+        wire.write(regAddr + i);
+        const uint8_t errorCode = Wire.endTransmission(false); // don't send stopbit
+
+        // regAddrを書き込めてなければ処理中断
+        if (errorCode != 0) {
+            return errorCode;
+        }
+
+        // Read reg
+        const uint8_t readBytes = wire.requestFrom(slaveAddr, 1, true); // restart, read and send stopbit
+        regDataPtr[i] = wire.read();
+    }
+
+#if 0 /* I2CでBurst Readかけると何故かStopbit待ちになってハングする */
     // Write regAddr for read
     wire.beginTransmission(slaveAddr);
     wire.write(regAddr);
@@ -34,7 +51,7 @@ uint8_t i2cReadReg(TwoWire& wire, uint8_t slaveAddr, uint8_t regAddr, uint8_t* r
     for (uint8_t i = 0; i < readBytes; i++) {
         regDataPtr[i] = wire.read();
     }
-
+#endif
     return 0;
 }
 
@@ -58,106 +75,102 @@ uint8_t i2cWriteReg(TwoWire& wire, uint8_t slaveAddr, uint8_t regAddr, uint8_t r
 ////////////////////////////////
 // TODO: グルーロジック以外はライブラリとして分離
 
-#include <M5StickC.h>
+#include <TFT_eSPI.h> // Graphics and font library for ILI9341 driver chip
+#include <SPI.h>
+
+static TFT_eSPI tft = TFT_eSPI();
+static TwoWire& wire = Wire;
 const uint8_t I2C_SLAVE_ADDR_MS4 = 0x2a;
 
 /**
  * @brief MS4をリセットします
  */
 void ms4Reset(TwoWire& wire) {
-    M5.Lcd.print("MS4 Reset");
+    tft.print("MS4 Reset");
 
     const uint8_t errorCode = i2cWriteReg(wire, I2C_SLAVE_ADDR_MS4, 0xf0, 0xa5); // 0xfcに0xa5を書くとリセット
     if (errorCode != 0) {
-        M5.Lcd.setTextColor(RED);
-        M5.Lcd.print("Error: ");
-        M5.Lcd.print(errorCode);
+        tft.setTextColor(TFT_RED);
+        tft.print("Error: ");
+        tft.print(errorCode);
         while(true) {}
     }
-    M5.Lcd.print("...");
+    tft.print("...");
     delay(10000);
-    M5.Lcd.println("Done");
+    tft.println("Done");
 }
 
 /**
  * @brief FW Versionを読み出して表示します
  */
 void ms4ReadFwVersion(TwoWire& wire) {
-    M5.Lcd.print("Read FW Ver");
+    tft.print("Read FW Ver");
 
     uint8_t buf[3] = {};
     // Firmware version, Firmware sub-version, Optional Sensors
     const uint8_t errorCode = i2cReadReg(wire, I2C_SLAVE_ADDR_MS4, 0x80, buf, 3);
     if (errorCode != 0) {
-        M5.Lcd.setTextColor(RED);
-        M5.Lcd.print(" Error: ");
-        M5.Lcd.print(errorCode);
+        tft.setTextColor(TFT_RED);
+        tft.print(" Error: ");
+        tft.print(errorCode);
         while(true) {}
     }
 
-    M5.Lcd.print(": ");
-    M5.Lcd.print(buf[0], HEX);
-    M5.Lcd.print(".");
-    M5.Lcd.println(buf[1], HEX);
-    M5.Lcd.print("opt sensor MIC:");
-    M5.Lcd.print((buf[2] >> 0x04) & 0x1, HEX);
-    M5.Lcd.print(" CO2:");
-    M5.Lcd.println(buf[2] & 0x1, HEX);
-}
-
-void ms4StartScan(TwoWire& wire) {
+    tft.print(": ");
+    tft.print(buf[0], HEX);
+    tft.print(".");
+    tft.println(buf[1], HEX);
+    tft.print("opt sensor MIC:");
+    tft.print((buf[2] >> 0x04) & 0x1, HEX);
+    tft.print(" CO2:");
+    tft.println(buf[2] & 0x1, HEX);
 }
 
 void setup() {
-    // M5StickC initialize
-    M5.begin();
-
     // LCD config
-    M5.Lcd.begin();
-    M5.Lcd.setRotation(3);
-    M5.Lcd.fillScreen(BLACK);
-    M5.Lcd.setCursor(0, 0);
-    M5.Lcd.setTextColor(WHITE);
-    M5.Lcd.setTextSize(1);
-    M5.Lcd.fillScreen(BLACK);
-    M5.Lcd.setCursor(0, 0);
+    tft.init();
+    tft.begin();
+    tft.setRotation(3);
+    tft.fillScreen(TFT_BLACK);
+    tft.setCursor(0, 0);
+    tft.setTextColor(TFT_WHITE);
+    tft.setTextSize(2);
+    tft.fillScreen(TFT_BLACK);
+    tft.setCursor(0, 0);
 
-    Wire.begin();
-    Wire.setClock(100000); // 100kHz
-
+    wire.begin();
 
     // startup
     delay(1000); // por時間を考慮しとく
-    ms4ReadFwVersion(Wire);
-    ms4StartScan(Wire);
+    ms4ReadFwVersion(wire);
+    delay(1000);
 
     // clear display
-    M5.Lcd.setRotation(0);
-    M5.Lcd.fillScreen(BLACK);
-    M5.Lcd.setCursor(0, 0);
+    tft.fillScreen(TFT_BLACK);
+    tft.setCursor(0, 0);
 }
 
 
-static int textColor = GREEN;
+static int textColor = TFT_GREEN;
 void loop() {
     // startScan
     // 0xc0 SCAN_START_BYTE: { Reserved, GAS, BATT, AUD, LIGHT, HUM, TEMP, STATUS }
-    const uint8_t scanError = i2cWriteReg(Wire, I2C_SLAVE_ADDR_MS4, 0xc0, 0x7f);
+    const uint8_t scanError = i2cWriteReg(wire, I2C_SLAVE_ADDR_MS4, 0xc0, 0x7f);
     if (scanError != 0) {
-        M5.Lcd.setTextColor(RED);
-        M5.Lcd.print("ScanStart Error: ");
-        M5.Lcd.print(scanError);
+        tft.setTextColor(TFT_RED);
+        tft.print("ScanStart Error: ");
+        tft.print(scanError);
         while(true) {}
     }
     delay(100);
 
     // read DataRegs
     uint8_t readBuf[15] = {};
-    const uint8_t readError = i2cReadReg(Wire, I2C_SLAVE_ADDR_MS4, 0x00, readBuf, 15);
+    const uint8_t readError = i2cReadReg(wire, I2C_SLAVE_ADDR_MS4, 0x00, readBuf, 15);
     if (readError != 0) {
-        M5.Lcd.setTextColor(RED);
-        M5.Lcd.print("DataRead Error: ");
-        M5.Lcd.print(readError);
+        tft.setTextColor(TFT_RED);
+        tft.print("DataRead Error: ");
+        tft.print(readError);
         while(true) {}
     }
 
@@ -175,25 +188,25 @@ void loop() {
     const float batteryVal     = (battery / 1024.0f) * (3.3f / 0.330f);
 
     // 適当に表示しておく
-    textColor = (textColor == GREEN) ? ORANGE : GREEN;
-    M5.Lcd.fillScreen(BLACK);
-    M5.Lcd.setCursor(0, 0);
-    M5.Lcd.setTextColor(textColor);
+    textColor = (textColor == TFT_GREEN) ? TFT_BLUE : TFT_GREEN;
+    tft.fillScreen(TFT_BLACK);
+    tft.setCursor(0, 0);
+    tft.setTextColor(textColor);
 
-    M5.Lcd.print("temp:");
-    M5.Lcd.println(temperatureVal);
-    M5.Lcd.print("humi:");
-    M5.Lcd.println(humidityVal);
-    M5.Lcd.print("light:");
-    M5.Lcd.println(light);
-    M5.Lcd.print("audio:");
-    M5.Lcd.println(audio);
-    M5.Lcd.print("battery:");
-    M5.Lcd.println(batteryVal);
-    M5.Lcd.print("co2:");
-    M5.Lcd.println(co2);
-    M5.Lcd.print("voc:");
-    M5.Lcd.println(voc);
+    tft.print("temp:");
+    tft.println(temperatureVal);
+    tft.print("humi:");
+    tft.println(humidityVal);
+    tft.print("light:");
+    tft.println(light);
+    tft.print("audio:");
+    tft.println(audio);
+    tft.print("battery:");
+    tft.println(batteryVal);
+    tft.print("co2:");
+    tft.println(co2);
+    tft.print("voc:");
+    tft.println(voc);
 
     delay(100);
 }
