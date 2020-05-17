@@ -73,17 +73,21 @@ uint8_t i2cWriteReg(TwoWire& wire, uint8_t slaveAddr, uint8_t regAddr, uint8_t r
 }
 
 ////////////////////////////////
-// TODO: グルーロジック以外はライブラリとして分離
 
-#include <TFT_eSPI.h> // Graphics and font library for ILI9341 driver chip
 #include <SPI.h>
 #include <Wire.h>
 
-#include  "BME680_driver/bme680.h"
+#include "TFT_eSPI/TFT_eSPI.h"
+#include "BME680_driver/bme680.h"
 
 static TFT_eSPI tft = TFT_eSPI();
 static TwoWire& wire = Wire;
+struct bme680_dev gas_sensor;
+
 void setup() {
+    Serial.begin(9600);
+    while(!Serial) {}
+
     // LCD config
     tft.init();
     tft.begin();
@@ -95,13 +99,14 @@ void setup() {
     tft.fillScreen(TFT_BLACK);
     tft.setCursor(0, 0);
 
+    // sensor config
     wire.begin();
 
     // startup
     delay(1000); // por時間を考慮しとく
 
     // clear display
-    tft.fillScreen(TFT_BLACK);
+    tft.fillScreen(TFT_WHITE);
     tft.setCursor(0, 0);
 }
 
