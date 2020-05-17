@@ -1,8 +1,12 @@
+![Build](https://github.com/kamiyaowl/wfh_monitor/workflows/Build/badge.svg)
+
 # Work from Home Monitor
 
 おうち環境モニター
 
 ## Build/Upload
+
+[ビルド済バイナリはこちら](https://github.com/kamiyaowl/wfh_monitor/actions?query=workflow%3ABuild)
 
 ### Arduino IDE
 
@@ -30,7 +34,7 @@ $ docker-compose run build # こっちでも可
 
 # upload:  /dev/ttyS10は対象デバイスのSerialportを指定
 $ docker run --rm -it  -v ${PWD}/:/work wfh_monitor ./upload.sh --device /dev/ttyS10:/dev/ttyTarget
-$ docker-compose run upload # こっちでも可
+$ docker-compose run upload # こっちでも可, devices項は適切に修正してください
 ```
 
 Windowsではまだうまくアップロードできていないので...。

@@ -17,13 +17,3 @@ jobs:
       with:
         name: wfh_monitor.zip
         path: wfh_monitor.ino.Seeeduino.samd.seeed_wio_terminal.*
-    - name: "TODO to Issue"
-      uses: "alstr/todo-to-issue-action@v1.1.1-beta"
-      with:
-        REPO: ${{ github.repository }}
-        BEFORE: ${{ github.event.before }}
-        SHA: ${{ github.sha }}
-        TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        LABEL: "TODO:"
-        COMMENT_MARKER: "//"
-      id: "todo"
