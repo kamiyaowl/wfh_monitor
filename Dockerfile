@@ -1,8 +1,7 @@
 FROM ubuntu:20.04
 
 # install from apt package
-RUN apt update && apt install -y \
-    curl
+RUN apt-get update && apt-get install -y curl
 
 # install arduino-cli
 RUN mkdir -p /tool

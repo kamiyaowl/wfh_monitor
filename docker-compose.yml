@@ -5,4 +5,13 @@ services:
       build: .
       volumes:
         - ./:/work
-      command: arduino-cli compile -b Seeeduino:samd:seeed_wio_terminal ./wfh_monitor.ino --verbose --log-level trace
+      command: >
+        bash -c "chmod +x ./build.sh && ./build.sh"
+    upload:
+      build: .
+      volumes:
+        - ./:/work
+      devices: 
+        - /dev/ttyS10:/dev/ttyTarget # ttyS10を自分のターゲットに置き換える
+      command: >
+        bash -c "chmod +x ./upload.sh && ./upload.sh"

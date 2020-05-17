@@ -86,7 +86,7 @@ struct bme680_dev gas_sensor;
 
 void setup() {
     Serial.begin(9600);
-    while(!Serial) {}
+    // while(!Serial) {}
 
     // LCD config
     tft.init();
@@ -112,7 +112,7 @@ void setup() {
 
 
 void loop() {
-
+    Serial.println("test");
 
     delay(100);
 }
