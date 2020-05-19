@@ -1,0 +1,17 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "build",
+			"type": "shell",
+			"command": "docker-compose run build",
+			"problemMatcher": []
+		},
+		{
+			"label": "upload-win",
+			"type": "shell",
+			"command": "./upload.bat",
+			"problemMatcher": []
+		}
+	]
+}

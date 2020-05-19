@@ -12,7 +12,7 @@
  * 
  * @note regAddrのオートインクリメントにデバイスが対応している必要があります
  */
-uint8_t i2cReadReg(TwoWire& wire, uint8_t slaveAddr, uint8_t regAddr, uint8_t* regDataPtr, uint8_t readByteCount) {
+uint8_t i2cReadReg(TwoWire& wireL, uint8_t slaveAddr, uint8_t regAddr, uint8_t* regDataPtr, uint8_t readByteCount) {
     // readByteCount=0の場合、通信する必要がない
     if (readByteCount == 0) {
         return 0;
@@ -20,8 +20,8 @@ uint8_t i2cReadReg(TwoWire& wire, uint8_t slaveAddr, uint8_t regAddr, uint8_t* r
 
     for (uint8_t i = 0; i < readByteCount; i++) {
         // Write regAddr for read
-        wire.beginTransmission(slaveAddr);
-        wire.write(regAddr + i);
+        wireL.beginTransmission(slaveAddr);
+        wireL.write(regAddr + i);
         const uint8_t errorCode = Wire.endTransmission(false); // don't send stopbit
 
         // regAddrを書き込めてなければ処理中断
@@ -30,8 +30,8 @@ uint8_t i2cReadReg(TwoWire& wire, uint8_t slaveAddr, uint8_t regAddr, uint8_t* r
         }
 
         // Read reg
-        const uint8_t readBytes = wire.requestFrom(slaveAddr, 1, true); // restart, read and send stopbit
-        regDataPtr[i] = wire.read();
+        const uint8_t readBytes = wireL.requestFrom(slaveAddr, 1, true); // restart, read and send stopbit
+        regDataPtr[i] = wireL.read();
     }
 
 #if 0 /* I2CでBurst Readかけると何故かStopbit待ちになってハングする */
@@ -64,9 +64,9 @@ uint8_t i2cReadReg(TwoWire& wire, uint8_t slaveAddr, uint8_t regAddr, uint8_t* r
  * @param regData 書き込みたいデータ
  * @return uint8_t Error Code。正常に完了した場合はI2C_ERROR_OK(0)が返ります
  */
-uint8_t i2cWriteReg(TwoWire& wire, uint8_t slaveAddr, uint8_t regAddr, uint8_t regData) {
-    wire.beginTransmission(slaveAddr);
-    wire.write(regAddr);
+uint8_t i2cWriteReg(TwoWire& wireL, uint8_t slaveAddr, uint8_t regAddr, uint8_t regData) {
+    wireL.beginTransmission(slaveAddr);
+    wireL.write(regAddr);
     Wire.write(regData);
     const uint8_t errorCode = Wire.endTransmission(true); // send stopbit
     return errorCode;
@@ -79,12 +79,18 @@ uint8_t i2cWriteReg(TwoWire& wire, uint8_t slaveAddr, uint8_t regAddr, uint8_t r
 
 #include "TFT_eSPI/TFT_eSPI.h"
 #include "BME680_driver/bme680.h"
+#include "Grove_Digital_Light_Sensor/Digital_Light_TSL2561.h"
 
-static TFT_eSPI tft = TFT_eSPI();
-static TwoWire& wire = Wire;
-struct bme680_dev gas_sensor;
+static TwoWire& wireL = Wire;     // left port
+// static TwoWire& wireR = Wire1;    // right port
+
+static TFT_eSPI tft = TFT_eSPI();                   // LCD
+static TSL2561_CalculateLux& lightSensor = TSL2561; // TSL2561 Digital Light Sensor
+struct bme680_dev gasSensor;             // BME680
 
 void setup() {
+    delay(1000); // por時間を考慮しとく
+    
     Serial.begin(9600);
     // while(!Serial) {}
 
@@ -100,10 +106,10 @@ void setup() {
     tft.setCursor(0, 0);
 
     // sensor config
-    wire.begin();
+    wireL.begin();
+    // lightSensor.init();
 
     // startup
-    delay(1000); // por時間を考慮しとく
 
     // clear display
     tft.fillScreen(TFT_WHITE);
@@ -112,7 +118,10 @@ void setup() {
 
 
 void loop() {
-    Serial.println("test");
+    // int32_t visibleLux = lightSensor.readVisibleLux();
+
+    // Serial.print(visibleLux);
+    // Serial.println(",");
 
     delay(100);
 }

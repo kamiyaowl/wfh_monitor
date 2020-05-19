@@ -4,3 +4,6 @@
 [submodule "TFT_eSPI"]
 	path = TFT_eSPI
 	url = https://github.com/Bodmer/TFT_eSPI.git
+[submodule "Grove_Digital_Light_Sensor"]
+	path = Grove_Digital_Light_Sensor
+	url = https://github.com/Seeed-Studio/Grove_Digital_Light_Sensor.git
