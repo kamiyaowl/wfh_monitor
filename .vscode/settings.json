@@ -1,7 +1,9 @@
 {
     "files.associations": {
         "istream": "cpp",
-        "*.tcc": "cpp"
+        "*.tcc": "cpp",
+        "ios": "cpp"
     },
-    "cSpell.enabled": false
+    "cSpell.enabled": false,
+    "C_Cpp.errorSquiggles": "Disabled"
 }

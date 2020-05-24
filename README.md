@@ -19,7 +19,8 @@
 
 ### Arduino IDE
 
-wfh_monitor.inoを開いてコンパイルして書き込んでください。seeed_wio_terminalが追加されている必要があります
+wfh_monitor.inoを開いてコンパイルして書き込んでください。seeed_wio_terminalが追加されている必要があります。
+また`./lib`下にあるライブラリのインストールが必要です。
 
 ### Arduino CLI
 
