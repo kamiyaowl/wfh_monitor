@@ -29,12 +29,10 @@ arduino-cli upload -p COM10 -i .\wfh_monitor.ino.Seeeduino.samd.seeed_wio_termin
 $ docker build . -t wfh_monitor
 
 # build
-$ docker run --rm -it  -v ${PWD}/:/work wfh_monitor ./build.sh
-$ docker-compose run build # こっちでも可
+$ docker-compose run build
 
-# upload:  /dev/ttyS10は対象デバイスのSerialportを指定
-$ docker run --rm -it  -v ${PWD}/:/work wfh_monitor ./upload.sh --device /dev/ttyS10:/dev/ttyTarget
-$ docker-compose run upload # こっちでも可, devices項は適切に修正してください
+# upload: docker-compose.ymlで対象デバイスのSerialportを指定
+$ docker-compose run upload
 ```
 
 Windowsではまだうまくアップロードできていないので...。

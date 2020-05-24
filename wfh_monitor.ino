@@ -81,9 +81,9 @@ uint8_t i2cWriteReg(TwoWire &wire, uint8_t slaveAddr, uint8_t regAddr, const uin
 #include <SPI.h>
 #include <Wire.h>
 
-#include "src/TFT_eSPI/TFT_eSPI.h"
-#include "src/BME680_driver/bme680.h"
-#include "src/Grove_Digital_Light_Sensor/Digital_Light_TSL2561.h"
+#include <TFT_eSPI.h>
+#include <bme680.h>
+#include <Digital_Light_TSL2561.h>
 
 static TwoWire &wireL = Wire; // left port
 // static TwoWire& wireR = Wire1;    // right port
@@ -119,8 +119,7 @@ void setup() {
     tft.setCursor(0, 0);
     tft.setTextColor(TFT_WHITE);
     tft.setTextSize(2);
-    tft.fillScreen(TFT_BLACK);
-    tft.setCursor(0, 0);
+    tft.print("boot");
 
     // sensor config
     wireL.begin();

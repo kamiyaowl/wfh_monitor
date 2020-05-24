@@ -5,14 +5,14 @@ services:
       build: .
       volumes:
         - ./:/work
-        - ./lib:/root/Arduino/libraries
+        - ./lib:/root/Arduino/libraries:ro
       command: >
         bash -c "chmod +x ./build.sh && ./build.sh"
     upload:
       build: .
       volumes:
         - ./:/work
-        - ./lib:/root/Arduino/libraries
+        - ./lib:/root/Arduino/libraries:ro
       devices: 
         - /dev/ttyS10:/dev/ttyTarget # ttyS10を自分のターゲットに置き換える
       command: >
