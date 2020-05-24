@@ -1,11 +1,14 @@
 #include <SPI.h>
 #include <Wire.h>
 
+static TwoWire &wireL = Wire;  // left  port
+static TwoWire &wireR = Wire1; // right  port
+
 #include <LovyanGFX.hpp>
 #include <Digital_Light_TSL2561.h>
-#include <seeed_bme680.h>
 
-static TwoWire &wireL = Wire; // left  port
+#define SEEED_BM680_WIRE (wireR)
+#include <seeed_bme680.h>
 
 static LGFX lcd;               
 static LGFX_Sprite sprite(&lcd);
