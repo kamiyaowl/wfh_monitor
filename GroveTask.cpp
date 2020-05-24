@@ -1,6 +1,13 @@
 #include "QueueDefs.h"
 #include "GroveTask.h"
 
+#ifdef WFH_MONITOR_ENABLE_DEBUG
+/**
+ * @brief Arduinoのシリアルプロッタ用にセンサの値を出力します
+ * 
+ * @param serial Serial Peripheral
+ * @param data 測定したSensor Data
+ */
 static void debugSerialPrint(Serial_& serial, const MeasureData_t& data) {
     serial.print(data.visibleLux);
     serial.print(",");
@@ -13,6 +20,8 @@ static void debugSerialPrint(Serial_& serial, const MeasureData_t& data) {
     serial.print(data.gas);
     serial.println(",");
 }
+#endif /* WFH_MONITOR_ENABLE_DEBUG */
+
 
 void GroveTask::setup(void) {
     this->serial.println("GroveTask setup");
@@ -22,7 +31,6 @@ void GroveTask::setup(void) {
 
 bool GroveTask::loop(void) {
     this->serial.println("GroveTask loop");
-    delay(1000); // TODO: remove
 
     // get sensor datas
     bme680.read_sensor_data();
@@ -34,14 +42,16 @@ bool GroveTask::loop(void) {
         .gas        = bme680.sensor_result_value.gas / 1000.0f,
         .timestamp  = this->timestamp,
     };
-    debugSerialPrint(this->serial, data);
-
     // TODO: 移動平均を取っておく, StackSizeに注意
 
     //TODO: Queueに送信
 
     /* for debug */
     this->timestamp++;
+
+#ifdef WFH_MONITOR_ENABLE_DEBUG
+    debugSerialPrint(this->serial, data);
+#endif
 
     return false; /**< no abort */
 }

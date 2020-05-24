@@ -4,7 +4,7 @@
 #include "TaskBase.h"
 
 /**
- * @brief Grove端子に接続されたIICセンサの値を収集するTaskです
+ * @brief Wio Terminalについている上部ボタンと4方向ボタンの値を取得するタスクです
  */
 class ButtonTask : public TaskBase {
     public:

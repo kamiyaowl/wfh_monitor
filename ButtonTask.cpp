@@ -6,8 +6,7 @@ void ButtonTask::setup(void) {
 
 bool ButtonTask::loop(void) {
     this->serial.println("ButtonTask loop");
-    delay(100);
-    //TODO:
+    //TODO: ボタン入力と平均化、トリガ検出を実装
 
     return false; /**< no abort */
 }

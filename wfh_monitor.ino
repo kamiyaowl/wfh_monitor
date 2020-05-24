@@ -19,12 +19,15 @@ static TSL2561_CalculateLux &lightSensor = TSL2561; // TSL2561 Digital Light Sen
 static Seeed_BME680 bme680((uint8_t)0x76);          // BME680 SlaveAddr=0x76
 
 /****************************** RTOS Task ******************************/
+#define WFH_MONITOR_ENABLE_DEBUG (1) /**< for debug mode*/
 #include "TaskBase.h"
 #include "GroveTask.h"
 #include "ButtonTask.h"
+#include "UiTask.h"
 
 static GroveTask groveTask(Serial, lightSensor, bme680);
 static ButtonTask buttonTask(Serial);
+static UiTask uiTask(Serial, lcd, sprite);
 
 /****************************** Main ******************************/
 void setup() {
@@ -39,23 +42,10 @@ void setup() {
     vSetErrorLed(ERROR_LED_PIN, ERROR_LED_LIGHTUP_STATE);
     groveTask.createTask(256, tskIDLE_PRIORITY);
     buttonTask.createTask(256, tskIDLE_PRIORITY);
+    uiTask.createTask(256, tskIDLE_PRIORITY);
     vTaskStartScheduler();
 }
 
 void loop() {
-    // Optional commands, can comment/uncomment below
-    Serial.print("."); //print out dots in terminal, we only do this when the RTOS is in the idle state
-    vNopDelayMS(100);
+    // vNopDelayMS(100);
 }
-
-
-// void setup() {
-//     // for POR
-//     delay(1000);
-
-//     // setup peripheral 
-//     Serial.begin(9600);
-
-//     // setup modules
-//     lcd.init();
-// }
