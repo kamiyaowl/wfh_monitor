@@ -8,18 +8,21 @@ static TwoWire &wireL = Wire;  // left  port
 #include <seeed_bme680.h>
 #include <Seeed_Arduino_FreeRTOS.h>
 
+#include "TaskBase.h"
+#include "GroveTask.h"
+
 static LGFX lcd;               
 static LGFX_Sprite sprite(&lcd);
 static TSL2561_CalculateLux &lightSensor = TSL2561; // TSL2561 Digital Light Sensor
 static Seeed_BME680 bme680((uint8_t)0x76);                   // BME680 SlaveAddr=0x76
 
-
-#define  ERROR_LED_PIN  13 //Led Pin: Typical Arduino Board
-#define ERROR_LED_LIGHTUP_STATE  LOW // the state that makes the led light up on your board, either low or high
+#define ERROR_LED_PIN  13
+#define ERROR_LED_LIGHTUP_STATE LOW
 
 static TaskHandle_t Handle_aTask;
 static TaskHandle_t Handle_bTask;
 static TaskHandle_t Handle_monitorTask;
+static TaskHandle_t groveTaskHandle;
 
 void myDelayUs(int us) {
     vTaskDelay(us / portTICK_PERIOD_US);
@@ -94,11 +97,9 @@ void taskMonitor(void* pvParameters) {
 //*****************************************************************
 
 void setup() {
-
     Serial.begin(115200);
 
-    vNopDelayMS(1000); // prevents usb driver crash on startup, do not omit this
-    while (!Serial) ;  // Wait for Serial terminal to open port before starting program
+    vNopDelayMS(1000);
 
     Serial.println("");
     Serial.println("******************************");
@@ -107,10 +108,7 @@ void setup() {
 
     vSetErrorLed(ERROR_LED_PIN, ERROR_LED_LIGHTUP_STATE);
 
-    // Create the threads that will be managed by the rtos
-    // Sets the stack size and priority of each task
-    // Also initializes a handler pointer to each task, which are important to communicate with and retrieve info from tasks
-    xTaskCreate(threadA,     "Task A",       256, NULL, tskIDLE_PRIORITY + 3, &Handle_aTask);
+    xTaskCreate(threadB,     "Task B",       256, NULL, tskIDLE_PRIORITY + 2, &Handle_bTask);
     xTaskCreate(threadB,     "Task B",       256, NULL, tskIDLE_PRIORITY + 2, &Handle_bTask);
     xTaskCreate(taskMonitor, "Task Monitor", 256, NULL, tskIDLE_PRIORITY + 1, &Handle_monitorTask);
 
