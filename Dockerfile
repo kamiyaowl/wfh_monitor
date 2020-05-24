@@ -18,9 +18,6 @@ RUN arduino-cli core install arduino:samd
 RUN arduino-cli core install Seeeduino:samd --additional-urls https://files.seeedstudio.com/arduino/package_seeeduino_boards_index.json
 # RUN arduino-cli core list # for debug
 
-# add 3rd-party library
-# RUN  arduino-cli lib install "libname"
-
 # create work directory
 RUN mkdir /work
 WORKDIR /work
