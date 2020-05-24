@@ -6,4 +6,5 @@ void GroveTask::setup(void) {
 
 void GroveTask::loop(void) {
     this->serial.println("GroveTask loop");
+    delay(1000);
 }

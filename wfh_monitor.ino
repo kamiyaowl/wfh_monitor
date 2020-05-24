@@ -95,6 +95,7 @@ void taskMonitor(void* pvParameters) {
 
 
 //*****************************************************************
+static GroveTask groveTask(Serial);
 
 void setup() {
     Serial.begin(115200);
@@ -111,6 +112,7 @@ void setup() {
     xTaskCreate(threadB,     "Task B",       256, NULL, tskIDLE_PRIORITY + 2, &Handle_bTask);
     xTaskCreate(threadB,     "Task B",       256, NULL, tskIDLE_PRIORITY + 2, &Handle_bTask);
     xTaskCreate(taskMonitor, "Task Monitor", 256, NULL, tskIDLE_PRIORITY + 1, &Handle_monitorTask);
+    groveTask.createTask(256, tskIDLE_PRIORITY);
 
     // Start the RTOS, this function will never return and will schedule the tasks.
     vTaskStartScheduler();

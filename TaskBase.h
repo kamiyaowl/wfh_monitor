@@ -8,17 +8,18 @@
 class TaskBase {
     public:
         TaskBase(void): isRunning(false) {}
-        virtual ~TaskBase() { this->deleteTask(); }
+        virtual ~TaskBase(void) { this->deleteTask(); }
 
-        virtual const char* getName(void);
         void createTask(size_t stackSize, uint32_t priority);
         void deleteTask(void);
+        TaskHandle_t getTaskHandle(void);
+        virtual const char* getName(void) = 0;
     protected:
         TaskHandle_t taskHandle;
         bool isRunning;
         void taskMain(void);
-        virtual void setup(void);
-        virtual void loop(void);
+        virtual void setup(void) = 0;
+        virtual void loop(void) = 0;
 };
 
 #endif /* TASKBASE_H */

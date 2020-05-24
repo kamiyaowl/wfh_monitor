@@ -26,6 +26,10 @@ void TaskBase::deleteTask(void) {
     vTaskDelete(this->taskHandle);
 }
 
+TaskHandle_t TaskBase::getTaskHandle(void) { 
+    return this->taskHandle;
+}
+
 void TaskBase::taskMain(void) {
     setup();
     while(true) {
