@@ -7,3 +7,6 @@
 [submodule "lib/Seeed_BME680"]
 	path = lib/Seeed_BME680
 	url = https://github.com/Seeed-Studio/Seeed_BME680.git
+[submodule "lib/Seeed_Arduino_FreeRTOS"]
+	path = lib/Seeed_Arduino_FreeRTOS
+	url = https://github.com/Seeed-Studio/Seeed_Arduino_FreeRTOS.git

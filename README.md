@@ -7,11 +7,11 @@
 ## 必要なもの
 
 * Wio Terminal: ATSAMD51 Core with Realtek RTL8720DN BLE 5.0 & Wi-Fi 2.4G/5G Dev Board
-** https://www.seeedstudio.com/Wio-Terminal-p-4509.html
+    * https://www.seeedstudio.com/Wio-Terminal-p-4509.html
 * Grove - Grove - Temperature, Humidity, Pressure and Gas Sensor for Arduino - BME680
-** https://www.seeedstudio.com/Grove-Temperature-Humidity-Pressure-and-Gas-Sensor-for-Arduino-BME680.html
+    * https://www.seeedstudio.com/Grove-Temperature-Humidity-Pressure-and-Gas-Sensor-for-Arduino-BME680.html
 * Grove - Digital Light Sensor - TSL2561
-** https://www.seeedstudio.com/Grove-Digital-Light-Sensor-TSL2561.html
+    * https://www.seeedstudio.com/Grove-Digital-Light-Sensor-TSL2561.html
 
 ## Build/Upload
 
@@ -35,9 +35,6 @@ arduino-cli upload -p COM10 -i .\wfh_monitor.ino.Seeeduino.samd.seeed_wio_termin
 ### Docker
 
 ```sh
-# build container
-$ docker build . -t wfh_monitor
-
 # build
 $ docker-compose run build
 
