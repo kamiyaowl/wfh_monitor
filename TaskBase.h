@@ -5,19 +5,18 @@
 
 #include <Seeed_Arduino_FreeRTOS.h>
 
-template<typename T>
 class TaskBase {
     public:
-        TaskBase(void);
-        virtual ~TaskBase();
+        TaskBase(void): isRunning(false) {}
+        virtual ~TaskBase() { this->deleteTask(); }
+
         virtual const char* getName(void);
-        void createTask(size_t stackSize, uint32_t priority, T param);
+        void createTask(size_t stackSize, uint32_t priority);
         void deleteTask(void);
     protected:
-        T param;
         TaskHandle_t taskHandle;
         bool isRunning;
-        void run(void);
+        void taskMain(void);
         virtual void setup(void);
         virtual void loop(void);
 };

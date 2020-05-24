@@ -1,25 +1,14 @@
 #include "TaskBase.h"
 
-template<typename T>
-TaskBase<T>::TaskBase(void){
-}
-
-template<typename T>
-TaskBase<T>::~TaskBase() {
-    this->deleteTask();
-}
-
-template<typename T>
-void TaskBase<T>::createTask(size_t stackSize, uint32_t priority, T param) {
+void TaskBase::createTask(size_t stackSize, uint32_t priority) {
     /* already running */
     if (this->isRunning) return;
 
     this->isRunning = true;
-    this->param = param;
     xTaskCreate(
         [](void* pvParameter){
             TaskBase* this_ptr = static_cast<TaskBase*>(pvParameter);
-            this_ptr->run();
+            this_ptr->taskMain();
         },
         this->getName(),
         stackSize,
@@ -29,8 +18,7 @@ void TaskBase<T>::createTask(size_t stackSize, uint32_t priority, T param) {
     );
 }
 
-template<typename T>
-void TaskBase<T>::deleteTask(void) {
+void TaskBase::deleteTask(void) {
     /* task is not running */
     if (!this->isRunning) return;
 
@@ -38,8 +26,7 @@ void TaskBase<T>::deleteTask(void) {
     vTaskDelete(this->taskHandle);
 }
 
-template<typename T>
-void TaskBase<T>::run(void) {
+void TaskBase::taskMain(void) {
     setup();
     while(true) {
         loop();
