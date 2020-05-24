@@ -109,7 +109,7 @@ void setup() {
 
     vSetErrorLed(ERROR_LED_PIN, ERROR_LED_LIGHTUP_STATE);
 
-    xTaskCreate(threadB,     "Task B",       256, NULL, tskIDLE_PRIORITY + 2, &Handle_bTask);
+    xTaskCreate(threadA,     "Task A",       256, NULL, tskIDLE_PRIORITY + 3, &Handle_aTask);
     xTaskCreate(threadB,     "Task B",       256, NULL, tskIDLE_PRIORITY + 2, &Handle_bTask);
     xTaskCreate(taskMonitor, "Task Monitor", 256, NULL, tskIDLE_PRIORITY + 1, &Handle_monitorTask);
     groveTask.createTask(256, tskIDLE_PRIORITY);

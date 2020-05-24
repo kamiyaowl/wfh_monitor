@@ -11,7 +11,7 @@ class GroveTask : public TaskBase {
     private:
         Serial_& serial; /**< for debug */
         void setup(void) override;
-        void loop(void) override;
+        bool loop(void) override;
 };
 
 #endif /* GROVETASK_H */

@@ -19,7 +19,8 @@ class TaskBase {
         bool isRunning;
         void taskMain(void);
         virtual void setup(void) = 0;
-        virtual void loop(void) = 0;
+        virtual bool loop(void) = 0;
+        virtual void exit(void) {};
 };
 
 #endif /* TASKBASE_H */

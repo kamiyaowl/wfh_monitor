@@ -31,8 +31,14 @@ TaskHandle_t TaskBase::getTaskHandle(void) {
 }
 
 void TaskBase::taskMain(void) {
+    bool isAbort = false;
+
     setup();
-    while(true) {
-        loop();
-    }
+    do {
+        isAbort = loop();
+    } while(!isAbort);
+
+    /* delete itself */
+    vTaskDelete(NULL);
+    this->isRunning = false;
 }
