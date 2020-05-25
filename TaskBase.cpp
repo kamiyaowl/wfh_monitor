@@ -1,7 +1,7 @@
 #include "TaskBase.h"
 
 void TaskBase::createTask(size_t stackSize, uint32_t priority) {
-    /* already running */
+    // already running
     if (this->isRunning) return;
 
     this->isRunning = true;
@@ -19,7 +19,7 @@ void TaskBase::createTask(size_t stackSize, uint32_t priority) {
 }
 
 void TaskBase::deleteTask(void) {
-    /* task is not running */
+    // task is not running
     if (!this->isRunning) return;
 
     this->isRunning = false;
@@ -38,7 +38,7 @@ void TaskBase::taskMain(void) {
         isAbort = loop();
     } while(!isAbort);
 
-    /* delete itself */
+    // delete itself
     vTaskDelete(NULL);
     this->isRunning = false;
 }
