@@ -51,9 +51,9 @@ void setup() {
 
     // setup rtos task
     vSetErrorLed(ERROR_LED_PIN, ERROR_LED_LIGHTUP_STATE);
-    groveTask.createTask(256, tskIDLE_PRIORITY);
-    buttonTask.createTask(256, tskIDLE_PRIORITY);
-    uiTask.createTask(256, tskIDLE_PRIORITY);
+    groveTask.createTask(  256, tskIDLE_PRIORITY + 0);
+    buttonTask.createTask( 256, tskIDLE_PRIORITY + 1);
+    uiTask.createTask(     256, tskIDLE_PRIORITY + 2);
     vTaskStartScheduler();
 }
 
