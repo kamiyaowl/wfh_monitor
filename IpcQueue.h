@@ -5,6 +5,11 @@
 
 #include <Seeed_Arduino_FreeRTOS.h>
 
+/**
+ * @brief Task間通信を行うQueueを提供します
+ * 
+ * @tparam T 送受信するデータ型
+ */
 template<typename T>
 class IpcQueue {
     public:
@@ -16,7 +21,7 @@ class IpcQueue {
 
         bool reset(void);
         bool send(T value);
-        bool receive(T& value);
+        bool receive(T* value);
         size_t remainNum(void);
         size_t emptyNum(void);
         size_t getDepth(void) { return this->depth; }

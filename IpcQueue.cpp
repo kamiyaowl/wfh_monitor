@@ -35,3 +35,23 @@ bool IpcQueue<T>::reset(void) {
     const auto result = xQueueReset(this->queueHandle);
     return (result == pdTRUE);
 }
+
+template<typename T>
+bool IpcQueue<T>::send(T value) {
+    // not created
+    if (!this->isInitialized) return false;
+
+    const auto result = xQueueSend(this->queueHandle, value, 0);
+    return (result == pdPASS);
+}
+
+template<typename T>
+bool IpcQueue<T>::receive(T* value) {
+    // not created
+    if (!this->isInitialized) return false;
+    // invalid dst ptr
+    if (value == nullptr) return false;
+
+    const auto result = xQueueReceive(this->queueHandle, value, portMAX_DELAY); /**< Messageが貯まるまで待つ*/
+    return (result == pdPASS);
+}
