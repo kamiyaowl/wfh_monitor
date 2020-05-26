@@ -1,5 +1,5 @@
-#ifndef QUEUEDEFS_H
-#define QUEUEDEFS_H
+#ifndef IPCQUEUEDEFS_H
+#define IPCQUEUEDEFS_H
 
 #include <cstdint>
 
@@ -37,4 +37,4 @@ typedef struct {
     uint32_t release;   /**< debounceの内、push->release変化した値 */
 } ButtonStateBmp_t;
 
-#endif /* QUEUEDEFS_H */
+#endif /* IPCQUEUEDEFS_H */

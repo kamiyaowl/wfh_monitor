@@ -1,4 +1,3 @@
-#include "QueueDefs.h"
 #include "GroveTask.h"
 
 #ifdef WFH_MONITOR_ENABLE_DEBUG
@@ -44,14 +43,17 @@ bool GroveTask::loop(void) {
     };
     // TODO: 移動平均を取っておく, StackSizeに注意
 
-    //TODO: Queueに送信
-
-    /* for debug */
-    this->timestamp++;
+    // Queue Fullでなければ送信
+    if (this->sendQueue.emptyNum() > 0) {
+        this->sendQueue.send(&data);
+    }
 
 #ifdef WFH_MONITOR_ENABLE_DEBUG
     debugSerialPrint(this->serial, data);
 #endif
+
+    /* for debug */
+    this->timestamp++;
 
     return false; /**< no abort */
 }

@@ -18,6 +18,13 @@ static LGFX_Sprite sprite(&lcd);
 static TSL2561_CalculateLux &lightSensor = TSL2561; // TSL2561 Digital Light Sensor
 static Seeed_BME680 bme680((uint8_t)0x76);          // BME680 SlaveAddr=0x76
 
+/****************************** RTOS Queue ******************************/
+#include "IpcQueueDefs.h"
+#include "IpcQueue.h"
+
+static IpcQueue<MeasureData_t> measureDataQueue;
+static IpcQueue<ButtonStateBmp_t> buttonStateQueue;
+
 /****************************** RTOS Task ******************************/
 #define WFH_MONITOR_ENABLE_DEBUG (1) /**< for debug mode*/
 #include "TaskBase.h"
@@ -25,9 +32,9 @@ static Seeed_BME680 bme680((uint8_t)0x76);          // BME680 SlaveAddr=0x76
 #include "ButtonTask.h"
 #include "UiTask.h"
 
-static GroveTask groveTask(Serial, lightSensor, bme680);
-static ButtonTask buttonTask(Serial);
-static UiTask uiTask(Serial, lcd, sprite);
+static GroveTask groveTask(measureDataQueue, Serial, lightSensor, bme680);
+static ButtonTask buttonTask(buttonStateQueue, Serial);
+static UiTask uiTask(measureDataQueue, buttonStateQueue, Serial, lcd, sprite);
 
 /****************************** Main ******************************/
 void setup() {
@@ -38,11 +45,15 @@ void setup() {
     // for por
     vNopDelayMS(1000);
 
-    // setup rtos
+    // setup rtos queue
+    measureDataQueue.createQueue(4);
+    buttonStateQueue.createQueue(4);
+
+    // setup rtos task
     vSetErrorLed(ERROR_LED_PIN, ERROR_LED_LIGHTUP_STATE);
-    groveTask.createTask(256, tskIDLE_PRIORITY);
-    buttonTask.createTask(256, tskIDLE_PRIORITY);
-    uiTask.createTask(256, tskIDLE_PRIORITY);
+    groveTask.createTask(  256, tskIDLE_PRIORITY + 0);
+    buttonTask.createTask( 256, tskIDLE_PRIORITY + 0);
+    uiTask.createTask(     256, tskIDLE_PRIORITY + 0);
     vTaskStartScheduler();
 }
 
