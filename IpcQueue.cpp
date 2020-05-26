@@ -55,3 +55,20 @@ bool IpcQueue<T>::receive(T* value) {
     const auto result = xQueueReceive(this->queueHandle, value, portMAX_DELAY); /**< Messageが貯まるまで待つ*/
     return (result == pdPASS);
 }
+
+template<typename T>
+size_t IpcQueue<T>::remainNum(void) {
+    // not created
+    if (!this->isInitialized) return 0;
+
+    return uxQueueMessagesWaiting(this->queueHandle);
+}
+
+template<typename T>
+size_t IpcQueue<T>::emptyNum(void) {
+    // not created
+    if (!this->isInitialized) return 0;
+
+    return this->depth - uxQueueMessagesWaiting(this->queueHandle);
+}
+
