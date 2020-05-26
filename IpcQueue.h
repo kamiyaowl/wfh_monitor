@@ -7,6 +7,7 @@
 
 /**
  * @brief Task間通信を行うQueueを提供します
+ * @note 一部関数はQueue class内部変数が変更されるため、割り込み/中断が発生しない状況で使用する必要があります
  * 
  * @tparam T 送受信するデータ型
  */
@@ -24,6 +25,7 @@ class IpcQueue {
 
         /**
          * @brief Create a RTOS Queue
+         * @note この関数はQueue class内部変数が変更されるため、割り込み/中断が発生しない状況で使用する必要があります
          * 
          * @param queueDepth Queueの要素数
          * @return true 作成成功
@@ -46,6 +48,7 @@ class IpcQueue {
 
         /**
          * @brief Delete a RTOS Queue
+         * @note この関数はQueue class内部変数が変更されるため、割り込み/中断が発生しない状況で使用する必要があります
          * 
          * @return true 削除最高
          * @return false 削除失敗
@@ -77,33 +80,35 @@ class IpcQueue {
         /**
          * @brief Queueにデータを送信します
          * 
-         * @param value 送信するデータ
+         * @param dataPtr 送信するデータのポインタ、内容はQueue上にコピーされます
          * @return true 送信成功
          * @return false 送信失敗。未初期化及びQueueu Fullの可能性があります
          */
-        bool send(T value) {
+        bool send(const T* dataPtr) {
             // not created
             if (!this->isInitialized) return false;
+            // invalid dataPtr
+            if (dataPtr == nullptr) return false;
 
-            const auto result = xQueueSend(this->queueHandle, value, 0);
+            const auto result = xQueueSend(this->queueHandle, dataPtr, 0);
             return (result == pdPASS);
         }
 
         /**
          * @brief Queueからデータを受信します。
          * 
-         * @param value 受信するデータの格納先
+         * @param dataPtr 受信するデータの格納先
          * @param isBlocking 受信できるまで待機する場合はtrue
          * @return true 受信成功
-         * @return false 受信失敗、未初期化及びQueue Empty、valueがnullptrの可能性があります
+         * @return false 受信失敗、未初期化及びQueue Empty、dataPtrがnullptrの可能性があります
          */
-        bool receive(T* value, bool isBlocking) {
+        bool receive(T* dataPtr, bool isBlocking) {
             // not created
             if (!this->isInitialized) return false;
-            // invalid dst ptr
-            if (value == nullptr) return false;
+            // invalid dataPtr
+            if (dataPtr == nullptr) return false;
 
-            const auto result = xQueueReceive(this->queueHandle, value, (isBlocking ? portMAX_DELAY : 0)); // portMAX_DELAYを指定するとMessageが貯まるまで待つ
+            const auto result = xQueueReceive(this->queueHandle, dataPtr, (isBlocking ? portMAX_DELAY : 0)); // portMAX_DELAYを指定するとMessageが貯まるまで待つ
             return (result == pdPASS);
         }
 

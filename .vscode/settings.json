@@ -2,7 +2,16 @@
     "files.associations": {
         "istream": "cpp",
         "*.tcc": "cpp",
-        "ios": "cpp"
+        "ios": "cpp",
+        "functional": "cpp",
+        "optional": "cpp",
+        "system_error": "cpp",
+        "type_traits": "cpp",
+        "xtr1common": "cpp",
+        "ratio": "cpp",
+        "array": "cpp",
+        "tuple": "cpp",
+        "utility": "cpp"
     },
     "cSpell.enabled": false,
     "C_Cpp.errorSquiggles": "Disabled"
