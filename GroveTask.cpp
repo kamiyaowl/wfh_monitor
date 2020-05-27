@@ -1,6 +1,7 @@
+#include "SysTimer.h"
 #include "GroveTask.h"
 
-#ifdef WFH_MONITOR_ENABLE_DEBUG
+#ifdef WFH_MONITOR_ENABLE_SERIAL_PRINT_SENSOR_DATA
 /**
  * @brief Arduinoのシリアルプロッタ用にセンサの値を出力します
  * 
@@ -19,18 +20,15 @@ static void debugSerialPrint(Serial_& serial, const MeasureData_t& data) {
     serial.print(data.gas);
     serial.println(",");
 }
-#endif /* WFH_MONITOR_ENABLE_DEBUG */
+#endif /* WFH_MONITOR_ENABLE_SERIAL_PRINT_SENSOR_DATA */
 
 
 void GroveTask::setup(void) {
-    this->serial.println("GroveTask setup");
     this->lightSensor.init();
     this->bme680.init();
 }
 
 bool GroveTask::loop(void) {
-    this->serial.println("GroveTask loop");
-
     // get sensor datas
     bme680.read_sensor_data();
     const MeasureData_t data = {
@@ -39,7 +37,7 @@ bool GroveTask::loop(void) {
         .pressure   = bme680.sensor_result_value.pressure / 1000.0f,
         .humidity   = bme680.sensor_result_value.humidity,
         .gas        = bme680.sensor_result_value.gas / 1000.0f,
-        .timestamp  = this->timestamp,
+        .timestamp  = SysTimer::getTickCount(),
     };
     // TODO: 移動平均を取っておく, StackSizeに注意
 
@@ -48,12 +46,9 @@ bool GroveTask::loop(void) {
         this->sendQueue.send(&data);
     }
 
-#ifdef WFH_MONITOR_ENABLE_DEBUG
+#ifdef WFH_MONITOR_ENABLE_SERIAL_PRINT_SENSOR_DATA
     debugSerialPrint(this->serial, data);
 #endif
-
-    /* for debug */
-    this->timestamp++;
 
     return false; /**< no abort */
 }

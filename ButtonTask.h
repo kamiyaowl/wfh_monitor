@@ -16,6 +16,7 @@ class ButtonTask : public TaskBase {
         const char* getName(void) override { return "ButtonTask"; }
     private:
         IpcQueue<ButtonStateBmp_t>& sendQueue; /**< ボタン入力送信用 */
+        uint32_t oldDebounce; /**< 前回のdebounce済の値 */
 
         Serial_& serial; /**< for debug */
         void setup(void) override;

@@ -14,13 +14,12 @@
  */
 class GroveTask : public TaskBase {
     public:
-        GroveTask(IpcQueue<MeasureData_t>& sendQueue, Serial_& serial, TSL2561_CalculateLux& lightSensor, Seeed_BME680& bme680): timestamp(0), sendQueue(sendQueue), serial(serial), lightSensor(lightSensor), bme680(bme680) {}
+        GroveTask(IpcQueue<MeasureData_t>& sendQueue, Serial_& serial, TSL2561_CalculateLux& lightSensor, Seeed_BME680& bme680): sendQueue(sendQueue), serial(serial), lightSensor(lightSensor), bme680(bme680) {}
         virtual ~GroveTask(void) {}
         const char* getName(void) override { return "GroveTask"; }
     private:
         IpcQueue<MeasureData_t>& sendQueue; /**< 測定データの送信先 */
 
-        uint32_t timestamp; /**< for debug */
         Serial_& serial; /**< for debug */
         TSL2561_CalculateLux& lightSensor;
         Seeed_BME680& bme680;

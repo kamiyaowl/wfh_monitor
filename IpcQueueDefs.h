@@ -16,6 +16,7 @@ typedef struct {
 } MeasureData_t;
 
 namespace ButtonState {
+    static constexpr uint32_t NONE  = 0x00000000;
     static constexpr uint32_t UP    = 0x00000001;
     static constexpr uint32_t DOWN  = 0x00000002;
     static constexpr uint32_t LEFT  = 0x00000004;
@@ -35,6 +36,7 @@ typedef struct {
     uint32_t debounce;  /**< チャタリング除去済の値 */
     uint32_t push;      /**< debounceの内、release->push変化した値 */
     uint32_t release;   /**< debounceの内、push->release変化した値 */
+    uint32_t timestamp;
 } ButtonStateBmp_t;
 
 #endif /* IPCQUEUEDEFS_H */
