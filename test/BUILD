@@ -1,10 +1,10 @@
 cc_test (
     name = "test",
-    srcs = [
-        "GroveTaskTest.cpp",
-    ],
+    srcs = glob(["*.cpp"]),
     deps = [
         "@gtest//:gtest",
-        "@gtest//:gtest_main"
+        "@gtest//:gtest_main",
+        "//src",
+        "//lib",
     ],
 )
