@@ -19,8 +19,8 @@ static TSL2561_CalculateLux &lightSensor = TSL2561; // TSL2561 Digital Light Sen
 static Seeed_BME680 bme680((uint8_t)0x76);          // BME680 SlaveAddr=0x76
 
 /****************************** RTOS Queue ******************************/
-#include "IpcQueueDefs.h"
-#include "IpcQueue.h"
+#include "src/IpcQueueDefs.h"
+#include "src/IpcQueue.h"
 
 // 複数CPUで動作させる場合、ローカル変数がCPU Data Cacheに乗る可能性があるので
 // NonCacheアクセスを矯正できる場所(TCM), 参照時はNonCacheアクセスする, 書き込み後FlushDCache/読み出し前InvalidateDCacheを徹底する
@@ -31,10 +31,10 @@ static IpcQueue<ButtonStateBmp_t> buttonStateQueue;
 #define WFH_MONITOR_ENABLE_SERIAL_PRINT_SENSOR_DATA (0)
 #define WFH_MONITOR_ENABLE_SERIAL_PRINT_BUTTON_DATA (1)
 
-#include "TaskBase.h"
-#include "GroveTask.h"
-#include "ButtonTask.h"
-#include "UiTask.h"
+#include "src/TaskBase.h"
+#include "src/GroveTask.h"
+#include "src/ButtonTask.h"
+#include "src/UiTask.h"
 
 static GroveTask groveTask(measureDataQueue, Serial, lightSensor, bme680);
 static ButtonTask buttonTask(buttonStateQueue, Serial);
