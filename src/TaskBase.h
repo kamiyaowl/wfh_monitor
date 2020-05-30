@@ -54,7 +54,7 @@ class TaskBase {
         /**
          * @brief FreeRTOSから起動されるTask本体です
          */
-        void taskMain(void);
+        virtual void taskMain(void);
 
         /**
          * @brief Task起動後1回だけ呼び出されます

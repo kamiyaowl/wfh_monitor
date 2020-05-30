@@ -29,9 +29,12 @@ static void debugSerialPrint(Serial_& serial, const uint32_t& data) {
 #endif /* WFH_MONITOR_ENABLE_SERIAL_PRINT_BUTTON_DATA */
 
 void ButtonTask::setup(void) {
+    // fps control
+    this->setFps(60);
+
     // port initialize
     pinMode(WIO_5S_UP,    INPUT_PULLUP);
-    pinMode(WIO_5S_DOWM,  INPUT_PULLUP);
+    pinMode(WIO_5S_DOWN,  INPUT_PULLUP);
     pinMode(WIO_5S_LEFT,  INPUT_PULLUP);
     pinMode(WIO_5S_RIGHT, INPUT_PULLUP);
     pinMode(WIO_5S_PRESS, INPUT_PULLUP);
@@ -47,7 +50,7 @@ bool ButtonTask::loop(void) {
     // get raw button input
     uint32_t raw = 0x0;
     raw |= (digitalRead(WIO_5S_UP)    == LOW) ? ButtonState::UP    : ButtonState::NONE;
-    raw |= (digitalRead(WIO_5S_DOWM)  == LOW) ? ButtonState::DOWN  : ButtonState::NONE;
+    raw |= (digitalRead(WIO_5S_DOWN)  == LOW) ? ButtonState::DOWN  : ButtonState::NONE;
     raw |= (digitalRead(WIO_5S_LEFT)  == LOW) ? ButtonState::LEFT  : ButtonState::NONE;
     raw |= (digitalRead(WIO_5S_RIGHT) == LOW) ? ButtonState::RIGHT : ButtonState::NONE;
     raw |= (digitalRead(WIO_5S_PRESS) == LOW) ? ButtonState::PRESS : ButtonState::NONE;

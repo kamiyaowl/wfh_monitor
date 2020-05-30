@@ -10,13 +10,13 @@ ENV PATH $PATH:/tool/
 RUN echo $PATH
 
 # refresh platform indexes
+# ビルドキャッシュされると最新のBoardが見つからなくなる可能性があるので--no-cacheでビルドすること
 RUN arduino-cli core update-index
 RUN arduino-cli core update-index --additional-urls https://files.seeedstudio.com/arduino/package_seeeduino_boards_index.json
 
 # add arduino core and libraries
-RUN arduino-cli core install arduino:samd
-RUN arduino-cli core install Seeeduino:samd --additional-urls https://files.seeedstudio.com/arduino/package_seeeduino_boards_index.json
-# RUN arduino-cli core list # for debug
+RUN arduino-cli core install Seeeduino:samd@1.7.6 --additional-urls https://files.seeedstudio.com/arduino/package_seeeduino_boards_index.json
+RUN arduino-cli core list
 
 # create work directory
 RUN mkdir /work

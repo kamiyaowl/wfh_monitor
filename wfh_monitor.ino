@@ -1,3 +1,7 @@
+/****************************** Options ******************************/
+// #define WFH_MONITOR_ENABLE_SERIAL_PRINT_SENSOR_DATA
+// #define WFH_MONITOR_ENABLE_SERIAL_PRINT_BUTTON_DATA
+
 /****************************** peripheral ******************************/
 #include <SPI.h>
 #include <Wire.h>
@@ -28,9 +32,6 @@ static IpcQueue<MeasureData_t> measureDataQueue;
 static IpcQueue<ButtonStateBmp_t> buttonStateQueue;
 
 /****************************** RTOS Task ******************************/
-#define WFH_MONITOR_ENABLE_SERIAL_PRINT_SENSOR_DATA (0)
-#define WFH_MONITOR_ENABLE_SERIAL_PRINT_BUTTON_DATA (1)
-
 #include "src/TaskBase.h"
 #include "src/GroveTask.h"
 #include "src/ButtonTask.h"
@@ -62,5 +63,4 @@ void setup() {
 }
 
 void loop() {
-    // vNopDelayMS(100);
 }
