@@ -29,6 +29,9 @@ static void debugSerialPrint(Serial_& serial, const uint32_t& data) {
 #endif /* WFH_MONITOR_ENABLE_SERIAL_PRINT_BUTTON_DATA */
 
 void ButtonTask::setup(void) {
+    // fps control
+    this->setFps(60);
+
     // port initialize
     pinMode(WIO_5S_UP,    INPUT_PULLUP);
     pinMode(WIO_5S_DOWN,  INPUT_PULLUP);

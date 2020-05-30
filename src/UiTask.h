@@ -6,12 +6,12 @@
 #include "IpcQueueDefs.h"
 #include "IpcQueue.h"
 
-#include "TaskBase.h"
+#include "FpsControlTask.h"
 
 /**
  * @brief UserInterfaceの表示を行うタスクです
  */
-class UiTask : public TaskBase {
+class UiTask : public FpsControlTask {
     public:
         UiTask(IpcQueue<MeasureData_t>& recvMeasureDataQueue,
                IpcQueue<ButtonStateBmp_t>& recvButtonStateQueue,
@@ -20,7 +20,7 @@ class UiTask : public TaskBase {
                LGFX_Sprite& sprite): counter(0), recvMeasureDataQueue(recvMeasureDataQueue), recvButtonStateQueue(recvButtonStateQueue), serial(serial), lcd(lcd), sprite(sprite) {}
          virtual ~UiTask(void) {}
         const char* getName(void) override { return "UiTask"; }
-    private:
+    protected:
         IpcQueue<MeasureData_t>& recvMeasureDataQueue; /**< 測定データ受信用 */
         IpcQueue<ButtonStateBmp_t>& recvButtonStateQueue; /**< ボタン入力受信用 */
 

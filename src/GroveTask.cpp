@@ -24,6 +24,10 @@ static void debugSerialPrint(Serial_& serial, const MeasureData_t& data) {
 
 
 void GroveTask::setup(void) {
+    // fps control
+    this->setFps(1);
+
+    // initialize sensor
     this->lightSensor.init();
     this->bme680.init();
 }
@@ -39,7 +43,6 @@ bool GroveTask::loop(void) {
         .gas        = bme680.sensor_result_value.gas / 1000.0f,
         .timestamp  = SysTimer::getTickCount(),
     };
-    // TODO: 移動平均を取っておく, StackSizeに注意
 
     // Queue Fullでなければ送信
     if (this->sendQueue.emptyNum() > 0) {

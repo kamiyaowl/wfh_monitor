@@ -2,8 +2,12 @@
 #include "UiTask.h"
 
 void UiTask::setup(void) {
+    // fps control
+    this->setFps(30);
+
+    // initialize lcd
     this->lcd.init();
-    this->lcd.setTextSize(2);
+    this->lcd.setTextSize(1);
 
     // initial value
     this->latestMeasureData.visibleLux = 0.0f;
@@ -30,8 +34,9 @@ bool UiTask::loop(void) {
     //TODO: いい感じのUI
     this->lcd.setCursor(0,0);
     this->lcd.printf("#UiTask\n");
-    this->lcd.printf("systick=%d\n", SysTimer::getTickCount());
-    this->lcd.printf("counter=%d\n", this->counter);
+    this->lcd.printf("systick = %d\n", SysTimer::getTickCount());
+    this->lcd.printf("counter = %d\n", this->counter);
+    this->lcd.printf("maxFps  = %f\n", this->getFpsWithoutDelay());
     this->lcd.printf("\n");
 
     this->lcd.printf("#SensorData\n");
