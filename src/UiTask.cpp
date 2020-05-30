@@ -53,7 +53,7 @@ bool UiTask::loop(void) {
     this->lcd.printf("debounce  = %08x\n", this->latestButtonState.debounce);
     this->lcd.printf("push      = %08x\n", this->latestButtonState.push);
     this->lcd.printf("release   = %08x\n", this->latestButtonState.release);
-    this->lcd.printf("timestamp = %08x\n", this->latestButtonState.timestamp);
+    this->lcd.printf("timestamp = %u\n", this->latestButtonState.timestamp);
     this->lcd.printf("\n");
 
     /* for debug */
