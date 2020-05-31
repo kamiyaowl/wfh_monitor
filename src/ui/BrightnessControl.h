@@ -126,7 +126,7 @@ class BrightnessControl {
          * @brief 最新のbrighenessを更新し、必要に応じてバックライトの設定を更新します
          * 
          * @param visibleLux 照度センサの値[lux]
-         * @retval bool Transitionに遷移した場合はtrue
+         * @retval BrightnessControlState 処理後のstate
          */
         BrightnessControlState update(float visibleLux) {
             SERIAL_PRINT_BRIGHTNESS_CONTROL("update(visibleLux=%f) state=%d, currentIndex=%d\n", visibleLux, this->state, this->currentIndex);

@@ -2,14 +2,18 @@
 version: "3"
 services:
     build:
-      build: .
+      build:
+        context: .
+        dockerfile: arduino-cli.Dockerfile
       volumes:
         - ./:/work
         - ./lib:/root/Arduino/libraries:ro
       command: >
         bash -c "chmod +x ./build.sh && ./build.sh"
     upload:
-      build: .
+      build:
+        context: .
+        dockerfile: arduino-cli.Dockerfile
       volumes:
         - ./:/work
         - ./lib:/root/Arduino/libraries:ro
@@ -17,3 +21,11 @@ services:
         - /dev/ttyS10:/dev/ttyTarget # ttyS10を自分のターゲットに置き換える
       command: >
         bash -c "chmod +x ./upload.sh && ./upload.sh"
+    docs:
+      build:
+        context: .
+        dockerfile: ./doxygen.Dockerfile
+      volumes:
+        - ./:/work
+        - ./lib:/root/Arduino/libraries:ro
+      command: doxygen

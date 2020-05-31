@@ -131,3 +131,7 @@ dmypy.json
 *.bin
 *.elf
 bazel-*
+
+# doxygen
+html
+latex
