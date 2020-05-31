@@ -155,14 +155,30 @@ class BrightnessControl {
                     const uint32_t currentTick = SysTimer::getTickCount();
                     const uint32_t diff = SysTimer::diff(this->watchStartTick, currentTick);
                     if (diff > this->holdTick) {
-                        this->startTick = currentTick;
-                        this->srcSetting = this->currentIndex;
-                        this->dstSetting = this->watchIndex;
+                        this->transitionStartTick = currentTick;
+                        this->transitionSrcIndex = this->currentIndex;
+                        this->transitionDstIndex = this->watchIndex;
                         this->state = BrightnessControlState::Transition;
                     }
                 }
                 case BrightnessControlState::Transition: {
-                    
+                    // 遷移状態の割合を算出
+                    const uint32_t currentTick = SysTimer::getTickCount();
+                    const uint32_t diffTick = SysTimer::diff(this->tran, currentTick);
+                    // 設定時間立っていれば最終値を設定して終了
+                    if (diffTick > this->transitionTick) {
+                        this->lcd.setBrightness(this->settings[this->transitionDstIndex].brightness);
+                        this->currentIndex = this->transitionDstIndex;
+                        this->state = BrightnessControlState::Enable; // 最初に戻る
+                        break;
+                    }
+                    // 線形補間で設定値を決める
+                    const float rate = diffTick / static_cast<float>(this->transitionTick); // 事前にdiff <= transitionTickは確認済
+                    const float src  = static_cast<float>(this->settings[this->transitionSrcIndex].brightness); // 負数の扱いが面倒なので先にfloatにする
+                    const float dst  = static_cast<float>(this->settings[this->transitionDstIndex].brightness);
+                    const uint8_t brightness = static_cast<uint8_t>((dst - src) * rate + src);
+                    // 反映
+                    this->lcd.setBrightness(brightness);
                 }
                 default:
                     break;
@@ -218,9 +234,9 @@ class BrightnessControl {
         uint32_t watchStartTick; /**< 最後にマッチした設定を確認した時刻 */
         size_t watchIndex; /**< 最後に一致した該当する設定 */
         // watch->transition
-        uint32_t startTick; /**< 遷移開始時刻 */
-        uint32_t srcSetting; /**< 遷移元設定 */
-        uint32_t dstSetting; /**< 遷移先設定 */
+        uint32_t transitionStartTick; /**< 遷移開始時刻 */
+        uint32_t transitionSrcIndex; /**< 遷移元設定 */
+        uint32_t transitionDstIndex; /**< 遷移先設定 */
 };
 
 #endif /* BRIGHTNESSCONTROL_H */
