@@ -8,7 +8,7 @@
  * @param serial Serial Peripheral
  * @param data 測定したSensor Data
  */
-static void debugSerialPrint(Serial_& serial, const MeasureData_t& data) {
+static void debugSerialPrint(Serial_& serial, const MeasureData& data) {
     serial.print(data.visibleLux);
     serial.print(",");
     serial.print(data.tempature);
@@ -40,7 +40,7 @@ bool GroveTask::loop(void) {
 
     // get sensor datas
     bme680.read_sensor_data();
-    const MeasureData_t data = {
+    const MeasureData data = {
         .visibleLux = lightSensor.readVisibleLux(),
         .tempature  = bme680.sensor_result_value.temperature,
         .pressure   = bme680.sensor_result_value.pressure / 100.0f,

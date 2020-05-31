@@ -11,7 +11,8 @@
         "ratio": "cpp",
         "array": "cpp",
         "tuple": "cpp",
-        "utility": "cpp"
+        "utility": "cpp",
+        "cstddef": "cpp"
     },
     "cSpell.enabled": false,
     "C_Cpp.errorSquiggles": "Disabled"

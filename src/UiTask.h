@@ -13,19 +13,19 @@
  */
 class UiTask : public FpsControlTask {
     public:
-        UiTask(IpcQueue<MeasureData_t>& recvMeasureDataQueue,
-               IpcQueue<ButtonStateBmp_t>& recvButtonStateQueue,
+        UiTask(IpcQueue<MeasureData>& recvMeasureDataQueue,
+               IpcQueue<ButtonEventData>& recvButtonStateQueue,
                Serial_& serial,
                LGFX& lcd,
                LGFX_Sprite& sprite): counter(0), recvMeasureDataQueue(recvMeasureDataQueue), recvButtonStateQueue(recvButtonStateQueue), serial(serial), lcd(lcd), sprite(sprite) {}
          virtual ~UiTask(void) {}
         const char* getName(void) override { return "UiTask"; }
     protected:
-        IpcQueue<MeasureData_t>& recvMeasureDataQueue; /**< 測定データ受信用 */
-        IpcQueue<ButtonStateBmp_t>& recvButtonStateQueue; /**< ボタン入力受信用 */
+        IpcQueue<MeasureData>& recvMeasureDataQueue; /**< 測定データ受信用 */
+        IpcQueue<ButtonEventData>& recvButtonStateQueue; /**< ボタン入力受信用 */
 
-        MeasureData_t latestMeasureData;
-        ButtonStateBmp_t latestButtonState;
+        MeasureData latestMeasureData;
+        ButtonEventData latestButtonState;
 
         uint32_t counter; /**< for debug*/
         Serial_& serial; /**< for debug */
