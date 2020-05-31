@@ -39,7 +39,7 @@ static void debugSerialPrint(Serial_& serial, const uint32_t& data) {
  * 
  * @tparam N debounceする履歴値数
  */
-template<int N>
+template<size_t N>
 class ButtonTask : public FpsControlTask {
     public:
         ButtonTask(IpcQueue<ButtonEventData>& sendQueue, Serial_& serial): sendQueue(sendQueue), serial(serial) {}
