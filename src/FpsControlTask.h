@@ -4,6 +4,9 @@
 #include "SysTimer.h"
 #include "TaskBase.h"
 
+/**
+ * @brief FPS設定可能なタスクの基底クラスです
+ */
 class FpsControlTask : public TaskBase {
     public:
 

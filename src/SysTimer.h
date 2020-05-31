@@ -6,7 +6,7 @@
 #include <Seeed_Arduino_FreeRTOS.h>
 
 /**
- * @brief 時間取得昨日を提供します
+ * @brief 時間取得関連のAPIを提供します
  */
 namespace SysTimer {
     /**

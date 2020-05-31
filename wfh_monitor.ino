@@ -1,3 +1,14 @@
+/**
+ * @file wfh_monitor.ino
+ * @author kamiyaowl (kamiyaowl@gmail.com)
+ * @brief 
+ * @version 0.1
+ * @date 2020-06-01
+ * 
+ * @copyright Copyright (c) 2020 kamiyaowl
+ * 
+ */
+
 /****************************** Options ******************************/
 // #define WFH_MONITOR_ENABLE_SERIAL_PRINT_SENSOR_DATA
 // #define WFH_MONITOR_ENABLE_SERIAL_PRINT_BUTTON_DATA
