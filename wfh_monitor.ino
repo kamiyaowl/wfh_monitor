@@ -1,6 +1,7 @@
 /****************************** Options ******************************/
 // #define WFH_MONITOR_ENABLE_SERIAL_PRINT_SENSOR_DATA
 // #define WFH_MONITOR_ENABLE_SERIAL_PRINT_BUTTON_DATA
+// #define WFH_MONITOR_ENABLE_SERIAL_PRINT_BRIGHTNESS_CONTROL
 
 /****************************** peripheral ******************************/
 #include <SPI.h>
@@ -28,8 +29,8 @@ static Seeed_BME680 bme680((uint8_t)0x76);          // BME680 SlaveAddr=0x76
 
 // 複数CPUで動作させる場合、ローカル変数がCPU Data Cacheに乗る可能性があるので
 // NonCacheアクセスを矯正できる場所(TCM), 参照時はNonCacheアクセスする, 書き込み後FlushDCache/読み出し前InvalidateDCacheを徹底する
-static IpcQueue<MeasureData_t> measureDataQueue;
-static IpcQueue<ButtonStateBmp_t> buttonStateQueue;
+static IpcQueue<MeasureData> measureDataQueue;
+static IpcQueue<ButtonEventData> buttonStateQueue;
 
 /****************************** RTOS Task ******************************/
 #include "src/TaskBase.h"
@@ -58,7 +59,7 @@ void setup() {
     vSetErrorLed(ERROR_LED_PIN, ERROR_LED_LIGHTUP_STATE);
     groveTask.createTask(  256, tskIDLE_PRIORITY + 0);
     buttonTask.createTask( 256, tskIDLE_PRIORITY + 0);
-    uiTask.createTask(     256, tskIDLE_PRIORITY + 0);
+    uiTask.createTask(     256, tskIDLE_PRIORITY + 1);
     vTaskStartScheduler();
 }
 

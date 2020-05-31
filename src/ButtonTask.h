@@ -15,15 +15,15 @@
  * @param data 測定したButton Data Data
  */
 static void debugSerialPrint(Serial_& serial, const uint32_t& data) {
-    serial.print((data & ButtonState::UP)    != 0x0);
+    serial.print((data & ButtonState::Up)    != 0x0);
     serial.print(",");
-    serial.print((data & ButtonState::DOWN)  != 0x0);
+    serial.print((data & ButtonState::Down)  != 0x0);
     serial.print(",");
-    serial.print((data & ButtonState::LEFT)  != 0x0);
+    serial.print((data & ButtonState::Left)  != 0x0);
     serial.print(",");
-    serial.print((data & ButtonState::RIGHT) != 0x0);
+    serial.print((data & ButtonState::Right) != 0x0);
     serial.print(",");
-    serial.print((data & ButtonState::PRESS) != 0x0);
+    serial.print((data & ButtonState::Press) != 0x0);
     serial.print(",");
     serial.print((data & ButtonState::A)     != 0x0);
     serial.print(",");
@@ -39,14 +39,14 @@ static void debugSerialPrint(Serial_& serial, const uint32_t& data) {
  * 
  * @tparam N debounceする履歴値数
  */
-template<int N>
+template<size_t N>
 class ButtonTask : public FpsControlTask {
     public:
-        ButtonTask(IpcQueue<ButtonStateBmp_t>& sendQueue, Serial_& serial): sendQueue(sendQueue), serial(serial) {}
+        ButtonTask(IpcQueue<ButtonEventData>& sendQueue, Serial_& serial): sendQueue(sendQueue), serial(serial) {}
         virtual ~ButtonTask(void) {}
         const char* getName(void) override { return "ButtonTask"; }
     protected:
-        IpcQueue<ButtonStateBmp_t>& sendQueue; /**< ボタン入力送信用 */
+        IpcQueue<ButtonEventData>& sendQueue; /**< ボタン入力送信用 */
         uint32_t recents[N];  /**< debounce用の履歴値 */
         uint32_t recentsPtr;  /**< 次に書き込むrecentsのindex */
         uint32_t oldDebounce; /**< 前回のdebounce済の値 */
@@ -67,7 +67,7 @@ class ButtonTask : public FpsControlTask {
             pinMode(WIO_KEY_C,    INPUT_PULLUP);
 
             // variable initialize
-            this->oldDebounce = ButtonState::NONE;
+            this->oldDebounce = static_cast<uint32_t>(ButtonState::None);
             this->recentsPtr  = 0;
             for (uint32_t i = 0; i < N; i++) {
                 this->recents[i] = 0;
@@ -82,14 +82,14 @@ class ButtonTask : public FpsControlTask {
 
             // get raw button input
             uint32_t raw = 0x0;
-            raw |= (digitalRead(WIO_5S_UP)    == LOW) ? ButtonState::UP    : ButtonState::NONE;
-            raw |= (digitalRead(WIO_5S_DOWN)  == LOW) ? ButtonState::DOWN  : ButtonState::NONE;
-            raw |= (digitalRead(WIO_5S_LEFT)  == LOW) ? ButtonState::LEFT  : ButtonState::NONE;
-            raw |= (digitalRead(WIO_5S_RIGHT) == LOW) ? ButtonState::RIGHT : ButtonState::NONE;
-            raw |= (digitalRead(WIO_5S_PRESS) == LOW) ? ButtonState::PRESS : ButtonState::NONE;
-            raw |= (digitalRead(WIO_KEY_A)    == LOW) ? ButtonState::A     : ButtonState::NONE;
-            raw |= (digitalRead(WIO_KEY_B)    == LOW) ? ButtonState::B     : ButtonState::NONE;
-            raw |= (digitalRead(WIO_KEY_C)    == LOW) ? ButtonState::C     : ButtonState::NONE;
+            raw |= (digitalRead(WIO_5S_UP)    == LOW) ? static_cast<uint32_t>(ButtonState::Up)    : static_cast<uint32_t>(ButtonState::None);
+            raw |= (digitalRead(WIO_5S_DOWN)  == LOW) ? static_cast<uint32_t>(ButtonState::Down)  : static_cast<uint32_t>(ButtonState::None);
+            raw |= (digitalRead(WIO_5S_LEFT)  == LOW) ? static_cast<uint32_t>(ButtonState::Left)  : static_cast<uint32_t>(ButtonState::None);
+            raw |= (digitalRead(WIO_5S_RIGHT) == LOW) ? static_cast<uint32_t>(ButtonState::Right) : static_cast<uint32_t>(ButtonState::None);
+            raw |= (digitalRead(WIO_5S_PRESS) == LOW) ? static_cast<uint32_t>(ButtonState::Press) : static_cast<uint32_t>(ButtonState::None);
+            raw |= (digitalRead(WIO_KEY_A)    == LOW) ? static_cast<uint32_t>(ButtonState::A)     : static_cast<uint32_t>(ButtonState::None);
+            raw |= (digitalRead(WIO_KEY_B)    == LOW) ? static_cast<uint32_t>(ButtonState::B)     : static_cast<uint32_t>(ButtonState::None);
+            raw |= (digitalRead(WIO_KEY_C)    == LOW) ? static_cast<uint32_t>(ButtonState::C)     : static_cast<uint32_t>(ButtonState::None);
 
             // add recents
             this->recents[this->recentsPtr] = raw;
@@ -106,7 +106,7 @@ class ButtonTask : public FpsControlTask {
             const uint32_t release = this->oldDebounce & (currentDebounce ^ this->oldDebounce); // 差分かつ前回いるもの
 
             // send Queue
-            const ButtonStateBmp_t data = {
+            const ButtonEventData data = {
                 .raw = raw,
                 .debounce = currentDebounce,
                 .push = push,

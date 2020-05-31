@@ -8,7 +8,7 @@
  * @param serial Serial Peripheral
  * @param data 測定したSensor Data
  */
-static void debugSerialPrint(Serial_& serial, const MeasureData_t& data) {
+static void debugSerialPrint(Serial_& serial, const MeasureData& data) {
     serial.print(data.visibleLux);
     serial.print(",");
     serial.print(data.tempature);
@@ -25,7 +25,7 @@ static void debugSerialPrint(Serial_& serial, const MeasureData_t& data) {
 
 void GroveTask::setup(void) {
     // fps control
-    this->setFps(1);
+    this->setFps(2);
 
     // initialize sensor
     this->lightSensor.init();
@@ -33,9 +33,14 @@ void GroveTask::setup(void) {
 }
 
 bool GroveTask::loop(void) {
+    // Queueに空きがない場合、処理しても仕方ないので抜ける
+    if (this->sendQueue.emptyNum() == 0) {
+        return false; /**< no abort */            
+    }
+
     // get sensor datas
     bme680.read_sensor_data();
-    const MeasureData_t data = {
+    const MeasureData data = {
         .visibleLux = lightSensor.readVisibleLux(),
         .tempature  = bme680.sensor_result_value.temperature,
         .pressure   = bme680.sensor_result_value.pressure / 100.0f,
@@ -43,11 +48,7 @@ bool GroveTask::loop(void) {
         .gas        = bme680.sensor_result_value.gas / 1000.0f,
         .timestamp  = SysTimer::getTickCount(),
     };
-
-    // Queue Fullでなければ送信
-    if (this->sendQueue.emptyNum() > 0) {
-        this->sendQueue.send(&data);
-    }
+    this->sendQueue.send(&data);
 
 #ifdef WFH_MONITOR_ENABLE_SERIAL_PRINT_SENSOR_DATA
     debugSerialPrint(this->serial, data);
