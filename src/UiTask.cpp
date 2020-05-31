@@ -1,3 +1,5 @@
+#include <cfloat>
+
 #include "SysTimer.h"
 #include "UiTask.h"
 
@@ -20,6 +22,15 @@ void UiTask::setup(void) {
     this->latestButtonState.debounce = 0x0;
     this->latestButtonState.push = 0x0;
     this->latestButtonState.release = 0x0;
+
+    // initialize submodules
+    static constexpr BrightnessSetting brightnessSetting[UiTaskBrightnessPoint] = { // TODO: 設定ファイルから色々できるといいなぁ...
+        { .visibleLux =  50.0f , .brightness = 20 },
+        { .visibleLux = 120.0f , .brightness = 100 },
+        { .visibleLux = 180.0f , .brightness = 200 },
+        { .visibleLux = FLT_MAX, .brightness = 255 },
+    };
+    this->brightness.configure(true, 4000, 2000, brightnessSetting);
 }
 
 bool UiTask::loop(void) {
@@ -31,7 +42,10 @@ bool UiTask::loop(void) {
         this->recvButtonStateQueue.receive(&this->latestButtonState, false);
     }
 
-    //TODO: いい感じのUI
+    // backlight
+    brightness.update(this->latestMeasureData.visibleLux);
+
+    // test
     this->lcd.setCursor(0,0);
     this->lcd.printf("#UiTask\n");
     this->lcd.printf("systick = %d\n", SysTimer::getTickCount());

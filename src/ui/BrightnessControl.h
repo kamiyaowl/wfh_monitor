@@ -1,6 +1,13 @@
 #ifndef BRIGHTNESSCONTROL_H
 #define BRIGHTNESSCONTROL_H
 
+// for serial print debug
+#ifdef WFH_MONITOR_ENABLE_SERIAL_PRINT_BRIGHTNESS_CONTROL
+#define SERIAL_PRINT_BRIGHTNESS_CONTROL(...) (Serial.printf(__VA_ARGS__))
+#else
+#define SERIAL_PRINT_BRIGHTNESS_CONTROL(...)
+#endif
+
 #include <cstdint>
 
 #include "../SysTimer.h" //TODO: できれば相対インクルードやめたい
@@ -64,9 +71,9 @@ class BrightnessControl {
          * @param transitionMs 遷移するのに必要な期間[ms]
          * @param settings 調光設定、visibleLuxが昇順ではない場合は無視されます
          * 
-         * @note 4ポイントで実体化しるものの設定は2ポイントで良い場合、0,1に設定を入れて2,3にはvisibleLux=0の値を入れることで2ポイント制御できます
+         * @note N=4だが2ポイントで良い場合、0,1に設定を入れて2にvisibleLux=0の値を入れることで2ポイント制御できます
          */
-        void configure(bool isEnable, uint32_t holdMs, uint32_t transitionMs, BrightnessSetting settings[N]) {
+        void configure(bool isEnable, uint32_t holdMs, uint32_t transitionMs, const BrightnessSetting settings[N]) {
             this->avaibleSettingCount = 0;
             for (uint32_t i = 0; i < N; i++) {
                 BrightnessSetting s = settings[i];
@@ -122,6 +129,7 @@ class BrightnessControl {
          * @retval bool Transitionに遷移した場合はtrue
          */
         BrightnessControlState update(float visibleLux) {
+            SERIAL_PRINT_BRIGHTNESS_CONTROL("update(visibleLux=%f) state=%d, currentIndex=%d\n", visibleLux, this->state, this->currentIndex);
             switch (this->state) {
                 case BrightnessControlState::Disable:
                     // 設定無効, マニュアル設定後は何もしない
@@ -131,6 +139,7 @@ class BrightnessControl {
                     uint32_t dstIndex = 0;
                     if (!this->searchSetting(visibleLux, dstIndex)) {
                         // 有効な設定を見つけられなかった
+                        SERIAL_PRINT_BRIGHTNESS_CONTROL("[Enable->Enable] not found\n");
                         break;
                     }
                     // 現在の設定と異なっていればWatch開始
@@ -138,18 +147,24 @@ class BrightnessControl {
                         this->watchIndex = dstIndex;
                         this->watchStartTick = SysTimer::getTickCount();
                         this->state = BrightnessControlState::Watch;
+                        SERIAL_PRINT_BRIGHTNESS_CONTROL("[Enable->Watch] idx=%d, startTick=%d\n", this->watchIndex, this->watchStartTick);
                     }
+                    break;
                 }
                 case BrightnessControlState::Watch: {
                     // 該当するindexを算出する
                     uint32_t dstIndex = 0;
                     if (!this->searchSetting(visibleLux, dstIndex)) {
-                        // 有効な設定を見つけられなかった
+                        // 有効な設定を見つけられなかった->最初に戻る
+                        this->state = BrightnessControlState::Enable;
+                        SERIAL_PRINT_BRIGHTNESS_CONTROL("[Watch->Enable] not found\n");
                         break;
                     }
                     // Watch中のIndexと一致しなくなったら最初に戻る
                     if (dstIndex != this->watchIndex) {
                         this->state = BrightnessControlState::Enable;
+                        SERIAL_PRINT_BRIGHTNESS_CONTROL("[Watch->Enable] mismatch dstIndex=%d, wathcIndex=%d\n", dstIndex, this->watchIndex);
+                        break;
                     }
                     // 規定時間WatchできたらTransition開始
                     const uint32_t currentTick = SysTimer::getTickCount();
@@ -159,17 +174,23 @@ class BrightnessControl {
                         this->transitionSrcIndex = this->currentIndex;
                         this->transitionDstIndex = this->watchIndex;
                         this->state = BrightnessControlState::Transition;
+                        SERIAL_PRINT_BRIGHTNESS_CONTROL("[Watch->Transition] startTick=%d srcIndex=%d, dstIndex=%d\n", this->watchStartTick, this->transitionSrcIndex, this->transitionDstIndex);
                     }
+                    break;
                 }
                 case BrightnessControlState::Transition: {
                     // 遷移状態の割合を算出
                     const uint32_t currentTick = SysTimer::getTickCount();
-                    const uint32_t diffTick = SysTimer::diff(this->tran, currentTick);
+                    const uint32_t diffTick = SysTimer::diff(this->transitionStartTick, currentTick);
                     // 設定時間立っていれば最終値を設定して終了
                     if (diffTick > this->transitionTick) {
+                        // 最終値を設定
                         this->lcd.setBrightness(this->settings[this->transitionDstIndex].brightness);
+                        SERIAL_PRINT_BRIGHTNESS_CONTROL("[Transition] setBrightness(%d)\n", this->settings[this->transitionDstIndex].brightness);
+                        // ステータスを更新してEnableに戻る
                         this->currentIndex = this->transitionDstIndex;
-                        this->state = BrightnessControlState::Enable; // 最初に戻る
+                        this->state = BrightnessControlState::Enable;
+                        SERIAL_PRINT_BRIGHTNESS_CONTROL("[Transition->Enable] startTick=%d srcIndex=%d, dstIndex=%d\n", this->watchStartTick, this->transitionSrcIndex, this->transitionDstIndex);
                         break;
                     }
                     // 線形補間で設定値を決める
@@ -179,9 +200,9 @@ class BrightnessControl {
                     const uint8_t brightness = static_cast<uint8_t>((dst - src) * rate + src);
                     // 反映
                     this->lcd.setBrightness(brightness);
-                }
-                default:
+                    SERIAL_PRINT_BRIGHTNESS_CONTROL("[Transition] setBrightness(%d)\n", brightness);
                     break;
+                }
             }
             // 現在のstateを返す
             return this->state;
@@ -202,22 +223,33 @@ class BrightnessControl {
          * 
          * @param visibleLux 照度センサの値[lux]
          * @param index 見つけたindexが代入されます
-         * @return true 有効な値を見つけた
          * @return false 設定が存在しない、有効な設定内に合致する値ではなかった
          */
         bool searchSetting(float visibleLux, uint32_t& index) {
+            // 設定が存在しない
+            if (this->avaibleSettingCount == 0) {
+                return false;
+            }
             // 有効な設定を順に探して、エッジを見つける
-            for (uint32_t i = 0; i < this->avaibleSettingCount; i++) {
+            for (uint32_t i = 0; i < this->avaibleSettingCount - 1; i++) {
                 const bool isMatchCurrent = (visibleLux < this->settings[i].visibleLux);
-                const bool isExistNext    = (i < (this->avaibleSettingCount - 1));
-                const bool isMatchNext    = isExistNext && (visibleLux < this->settings[i].visibleLux); // isExistNextを見ないとOutOfIndexする
+                const bool isMatchNext    = (visibleLux < this->settings[i + 1].visibleLux);
                 // 現在の内容にマッチして、次の内容にマッチしない(もしくは存在しない)indexが境界
-                if (isMatchCurrent && !isMatchNext) {
+                if (isMatchCurrent && isMatchNext) {
                     index = i; // 見つけたindexをセット
+                    SERIAL_PRINT_BRIGHTNESS_CONTROL("searchSetting(visibleLux=%f) ret true. index=%d\n", visibleLux, index);
                     return true;
                 }
             }
-            // なかった場合
+            // 一番最後の要素のみ検査
+            const bool isMatchLast = (visibleLux < this->settings[this->avaibleSettingCount - 1].visibleLux);
+            if (isMatchLast) {
+                index = this->avaibleSettingCount - 1; // 最後の要素
+                SERIAL_PRINT_BRIGHTNESS_CONTROL("searchSetting(visibleLux=%f) ret true. lastIndex=%d\n", visibleLux, index);
+                return true;
+            }
+            // どれにも合致しなかった
+            SERIAL_PRINT_BRIGHTNESS_CONTROL("searchSetting(visibleLux=%f) ret false\n", visibleLux);
             return false;
         }
 

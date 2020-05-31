@@ -1,6 +1,7 @@
 /****************************** Options ******************************/
 // #define WFH_MONITOR_ENABLE_SERIAL_PRINT_SENSOR_DATA
 // #define WFH_MONITOR_ENABLE_SERIAL_PRINT_BUTTON_DATA
+// #define WFH_MONITOR_ENABLE_SERIAL_PRINT_BRIGHTNESS_CONTROL
 
 /****************************** peripheral ******************************/
 #include <SPI.h>

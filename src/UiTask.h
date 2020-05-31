@@ -6,7 +6,12 @@
 #include "IpcQueueDefs.h"
 #include "IpcQueue.h"
 
+#include "ui/BrightnessControl.h"
+
 #include "FpsControlTask.h"
+
+// BrightnessControlでの設定ポイント数
+static constexpr size_t UiTaskBrightnessPoint = 4;
 
 /**
  * @brief UserInterfaceの表示を行うタスクです
@@ -17,7 +22,7 @@ class UiTask : public FpsControlTask {
                IpcQueue<ButtonEventData>& recvButtonStateQueue,
                Serial_& serial,
                LGFX& lcd,
-               LGFX_Sprite& sprite): counter(0), recvMeasureDataQueue(recvMeasureDataQueue), recvButtonStateQueue(recvButtonStateQueue), serial(serial), lcd(lcd), sprite(sprite) {}
+               LGFX_Sprite& sprite): counter(0), recvMeasureDataQueue(recvMeasureDataQueue), recvButtonStateQueue(recvButtonStateQueue), serial(serial), lcd(lcd), sprite(sprite), brightness(lcd) {}
          virtual ~UiTask(void) {}
         const char* getName(void) override { return "UiTask"; }
     protected:
@@ -31,6 +36,8 @@ class UiTask : public FpsControlTask {
         Serial_& serial; /**< for debug */
         LGFX& lcd;
         LGFX_Sprite& sprite;
+        BrightnessControl<UiTaskBrightnessPoint, LGFX> brightness;
+
         void setup(void) override;
         bool loop(void) override;
 };
