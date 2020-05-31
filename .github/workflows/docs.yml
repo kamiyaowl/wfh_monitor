@@ -1,0 +1,24 @@
+name: Docs
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - run: git submodule update --init --recursive
+    - run: docker-compose run docs
+    - uses: actions/upload-artifact@v2
+      with:
+        name: html.zip
+        path: html/*
+    - uses: actions/upload-artifact@v2
+      with:
+        name: latex.zip
+        path: latex/*
+      
