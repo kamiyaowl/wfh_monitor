@@ -62,8 +62,8 @@ bool ButtonTask::loop(void) {
     const uint32_t currentDebounce = raw;
 
     // edge detect
-    const uint32_t push = (currentDebounce ^ this->oldDebounce);
-    const uint32_t release = (currentDebounce ^ this->oldDebounce);
+    const uint32_t push    = currentDebounce   & (currentDebounce ^ this->oldDebounce); // 差分かつ今回いるもの
+    const uint32_t release = this->oldDebounce & (currentDebounce ^ this->oldDebounce); // 差分かつ前回いるもの
 
     // send Queue
     const ButtonStateBmp_t data = {
