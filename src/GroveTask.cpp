@@ -38,7 +38,7 @@ bool GroveTask::loop(void) {
     const MeasureData_t data = {
         .visibleLux = lightSensor.readVisibleLux(),
         .tempature  = bme680.sensor_result_value.temperature,
-        .pressure   = bme680.sensor_result_value.pressure / 1000.0f,
+        .pressure   = bme680.sensor_result_value.pressure / 100.0f,
         .humidity   = bme680.sensor_result_value.humidity,
         .gas        = bme680.sensor_result_value.gas / 1000.0f,
         .timestamp  = SysTimer::getTickCount(),
