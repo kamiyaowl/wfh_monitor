@@ -1,4 +1,5 @@
 ![Build](https://github.com/kamiyaowl/wfh_monitor/workflows/Build/badge.svg)
+![Docs](https://github.com/kamiyaowl/wfh_monitor/workflows/Docs/badge.svg)
 
 # Work from Home Monitor
 
