@@ -50,7 +50,7 @@ static IpcQueue<ButtonEventData> buttonStateQueue;
 #include "src/UiTask.h"
 
 static GroveTask groveTask(measureDataQueue, Serial, lightSensor, bme680);
-static ButtonTask<4> buttonTask(buttonStateQueue, Serial);
+static ButtonTask<2> buttonTask(buttonStateQueue, Serial);
 static UiTask uiTask(measureDataQueue, buttonStateQueue, Serial, lcd, sprite);
 
 /****************************** Main ******************************/
