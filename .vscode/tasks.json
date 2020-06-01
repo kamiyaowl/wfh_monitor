@@ -8,6 +8,12 @@
 			"problemMatcher": []
 		},
 		{
+			"label": "build docs",
+			"type": "shell",
+			"command": "docker-compose run docs",
+			"problemMatcher": []
+		},
+		{
 			"label": "upload-win",
 			"type": "shell",
 			"command": "./upload.bat",
