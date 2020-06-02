@@ -52,11 +52,13 @@ class SharedResource {
          */
         template<class FUNC>
         void operateCritial(FUNC functor) {
+            xSemaphoreTake(this->semaphoreHandle, portMAX_DELAY);
             taskENTER_CRITICAL();
             {
-                this->operate(functor);
+                functor(this->value);
             }
             taskEXIT_CRITICAL();
+            xSemaphoreGive(this->semaphoreHandle);
         }
     protected:
         SemaphoreHandle_t semaphoreHandle;
