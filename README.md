@@ -5,6 +5,13 @@
 
 おうち環境モニター
 
+
+TODO: 写真
+
+## 機能
+
+TODO:
+
 ## 必要なもの
 
 * Wio Terminal: ATSAMD51 Core with Realtek RTL8720DN BLE 5.0 & Wi-Fi 2.4G/5G Dev Board
@@ -16,37 +23,65 @@
 * Grove - I2C Hub (6 Port)
     * https://www.seeedstudio.com/Grove-I2C-Hub-6-Port-p-4349.html
 
-## Build/Upload
+## 接続方法
 
-[ビルド済バイナリはこちら](https://github.com/kamiyaowl/wfh_monitor/actions?query=workflow%3ABuild)
+TODO:
 
-### Arduino IDE
+## 書き込み方法
 
-wfh_monitor.inoを開いてコンパイルして書き込んでください。seeed_wio_terminalが追加されている必要があります。
-また`./lib`下にあるライブラリのインストールが必要です。
 
-### Arduino CLI
+1. [Build - Github Actions](https://github.com/kamiyaowl/wfh_monitor/actions?query=workflow%3ABuild)からビルド済バイナリをダウンロードします。
+2. Bootloaderモードで起動します
+    * 方法は[Get Started with Wio Terminal - Seeed Wiki](https://wiki.seeedstudio.com/Wio-Terminal-Getting-Started/#getting-started)を参照。
+3. PCに接続するとArduinoのストレージデバイスが見えるので、`wfh_monitor.ino.Seeeduino.samd.seeed_wio_terminal.uf2`をドライブ上にコピーします
+4. 無事に起動したら完了
+
+## 操作説明
+
+TODO:
+
+## 依存ライブラリ
+
+素晴らしいライブラリをありがとうございます。
+
+* [lovyan03/LovyanGFX](https://github.com/lovyan03/LovyanGFX)
+* [Seeed-Studio/Grove_Digital_Light_Sensor](https://github.com/Seeed-Studio/Grove_Digital_Light_Sensor)
+* [Seeed-Studio/Seeed_Arduino_FreeRTOS](https://github.com/Seeed-Studio/Seeed_Arduino_FreeRTOS)
+* [Seeed-Studio/Seeed_BME680](https://github.com/Seeed-Studio/Seeed_BME680)
+
+## 開発者向け情報
+
+### ドキュメント
+
+細かいものは用意できていませんが、doxygenを整備しています。
+
+[Docs - GitHub Actions](https://github.com/kamiyaowl/wfh_monitor/actions?query=workflow%3ADocs) から最新のものをDLするか、`$ docker-compose run docs`, `$ doxygen`のいずれかで入手することができます。
+
+### 自分でビルドする方法
+
+Dockerを推奨しますが、
+
+#### Docker
 
 ```sh
-# build
-$ arduino-cli compile -b Seeeduino:samd:seeed_wio_terminal ./wfh_monitor.ino --verbose --log-level trace
-
-# upload
-arduino-cli upload -p COM10 -i .\wfh_monitor.ino.Seeeduino.samd.seeed_wio_terminal.bin -b Seeeduino:samd:seeed_wio_terminal --verbose --log-level trace --additional-urls https://files.seeedstudio.com/arduino/package_seeeduino_boards_index.json
-```
-
-### Docker
-
-```sh
-# build
 $ docker-compose run build
-
-# upload: docker-compose.ymlで対象デバイスのSerialportを指定
-$ docker-compose run upload
 ```
 
-Windowsではまだうまくアップロードできていないので...。
+#### Arduino CLI & Python
 
+`.lib`下にあるライブラリ、`Seeeduino:seeed_wio_terminal`の追加が必要です。
+詳しくは `arduino-cli.Dockerfile`をご参照ください
+
+```sh
+$ ./build.sh
 ```
-$ ./upload.bat
-```
+
+#### Arduino IDE
+
+1. seeed_wio_terminalをボードマネージャから追加します
+2. `./lib`下にあるライブラリをインストールします
+3. にwfh_monitor.inoを開いてコンパイルして書き込んでください。
+
+## License
+
+MIT
