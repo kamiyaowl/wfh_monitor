@@ -31,6 +31,9 @@ void UiTask::setup(void) {
         { .visibleLux = FLT_MAX, .brightness = 255 },
     };
     this->brightness.configure(true, 4000, 2000, brightnessSetting);
+
+    // initialize LittlevGL
+    // lvgl_setup();
 }
 
 bool UiTask::loop(void) {
@@ -72,6 +75,8 @@ bool UiTask::loop(void) {
 
     /* for debug */
     this->counter++;
+
+    // lv_task_handler();
 
     return false; /**< no abort */
 }
