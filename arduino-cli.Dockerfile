@@ -2,7 +2,7 @@ FROM ubuntu:20.04
 
 # install from apt package
 ENV DEBIAN_FRONTEND noninteractive
-RUN apt-get update && apt-get install -y curl
+RUN apt-get update && apt-get install -y curl python
 
 # install arduino-cli
 RUN mkdir -p /tool
