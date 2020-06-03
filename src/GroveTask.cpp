@@ -28,6 +28,7 @@ void GroveTask::setup(void) {
     this->setFps(2);
 
     // initialize sensor
+    // I2C Deviceで問題があったときにsetupでハングアップしないようにタスク内で初期化する
     this->lightSensor.init();
     this->bme680.init();
 }

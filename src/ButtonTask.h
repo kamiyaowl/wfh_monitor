@@ -42,7 +42,18 @@ static void debugSerialPrint(Serial_& serial, const uint32_t& data) {
 template<size_t N>
 class ButtonTask : public FpsControlTask {
     public:
+
+        /**
+         * @brief Construct a new Button Task object
+         * 
+         * @param sendQueue ボタン入力の送信Queue
+         * @param serial UARTペリフェラル
+         */
         ButtonTask(IpcQueue<ButtonEventData>& sendQueue, Serial_& serial): sendQueue(sendQueue), serial(serial) {}
+
+        /**
+         * @brief Destroy the Button Task object
+         */
         virtual ~ButtonTask(void) {}
         const char* getName(void) override { return "ButtonTask"; }
     protected:

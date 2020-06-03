@@ -1,5 +1,7 @@
 #include <cfloat>
 
+#include <lvgl.h>
+
 #include "SysTimer.h"
 #include "UiTask.h"
 
@@ -33,7 +35,9 @@ void UiTask::setup(void) {
     this->brightness.configure(true, 4000, 2000, brightnessSetting);
 
     // initialize LittlevGL
-    // lvgl_setup();
+    lv_obj_t *label = lv_label_create(lv_scr_act(), NULL);
+    lv_label_set_text(label, "Hello Arduino! (V6.1.1)");
+    lv_obj_align(label, NULL, LV_ALIGN_CENTER, 0, 0);
 }
 
 bool UiTask::loop(void) {
@@ -48,35 +52,11 @@ bool UiTask::loop(void) {
     // backlight
     brightness.update(this->latestMeasureData.visibleLux);
 
-    // test
-    this->lcd.setCursor(0,0);
-    this->lcd.printf("#UiTask\n");
-    this->lcd.printf("systick = %d\n", SysTimer::getTickCount());
-    this->lcd.printf("counter = %d\n", this->counter);
-    this->lcd.printf("maxFps  = %f\n", this->getFpsWithoutDelay());
-    this->lcd.printf("\n");
+    // lvgl worker
+    lv_task_handler();
 
-    this->lcd.printf("#SensorData\n");
-    this->lcd.printf("visibleLux = %f\n", this->latestMeasureData.visibleLux);
-    this->lcd.printf("tempature  = %f\n", this->latestMeasureData.tempature);
-    this->lcd.printf("pressure   = %f\n", this->latestMeasureData.pressure);
-    this->lcd.printf("humidity   = %f\n", this->latestMeasureData.humidity);
-    this->lcd.printf("gas        = %f\n", this->latestMeasureData.gas);
-    this->lcd.printf("timestamp  = %u\n", this->latestMeasureData.timestamp);
-    this->lcd.printf("\n");
-
-    this->lcd.printf("#Button\n");
-    this->lcd.printf("raw       = %08x\n", this->latestButtonState.raw);
-    this->lcd.printf("debounce  = %08x\n", this->latestButtonState.debounce);
-    this->lcd.printf("push      = %08x\n", this->latestButtonState.push);
-    this->lcd.printf("release   = %08x\n", this->latestButtonState.release);
-    this->lcd.printf("timestamp = %u\n", this->latestButtonState.timestamp);
-    this->lcd.printf("\n");
-
-    /* for debug */
+    // for debug
     this->counter++;
-
-    // lv_task_handler();
 
     return false; /**< no abort */
 }
