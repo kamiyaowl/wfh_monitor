@@ -5,6 +5,14 @@
 #include "SysTimer.h"
 #include "UiTask.h"
 
+// TODO: ちゃんと配置は考える
+static lv_obj_t* chart;
+static lv_chart_series_t* s1;
+static lv_chart_series_t* s2;
+static lv_chart_series_t* s3;
+static lv_chart_series_t* s4;
+static lv_chart_series_t* s5;
+
 void UiTask::setup(void) {
     // fps control
     this->setFps(30);
@@ -35,53 +43,39 @@ void UiTask::setup(void) {
     this->brightness.configure(true, 4000, 2000, brightnessSetting);
 
     // initialize LittlevGL
-    // TODO: いい感じに置き換え、おそらくlvglのタスク記述だけのクラスが必要
-    lv_obj_t *label = lv_label_create(lv_scr_act(), NULL);
-    lv_label_set_text(label, "WHF Monitor on Wio Terminal");
-    lv_obj_align(label, NULL, LV_ALIGN_IN_TOP_LEFT, 0, 0);
+    // TODO: ちゃんとやる
+    lv_obj_t* tv = lv_tabview_create(lv_scr_act(), NULL);
+    lv_obj_t* t1 = lv_tabview_add_tab(tv, "Monitor");
+    lv_obj_t* t2 = lv_tabview_add_tab(tv, "Detail");
+    lv_obj_t* t3 = lv_tabview_add_tab(tv, "Setting");
 
-    /*Create a chart*/
-    lv_obj_t * chart;
-    chart = lv_chart_create(lv_scr_act(), NULL);
-    lv_obj_set_size(chart, 200, 150);
-    lv_obj_align(chart, NULL, LV_ALIGN_CENTER, 0, 0);
-    lv_chart_set_type(chart, LV_CHART_TYPE_LINE);   /*Show lines and points too*/
+    lv_obj_t* parent = t1;
 
-    /*Add two data series*/
-    lv_chart_series_t * ser1 = lv_chart_add_series(chart, LV_COLOR_RED);
-    lv_chart_series_t * ser2 = lv_chart_add_series(chart, LV_COLOR_GREEN);
-
-    /*Set the next points on 'ser1'*/
-    lv_chart_set_next(chart, ser1, 10);
-    lv_chart_set_next(chart, ser1, 10);
-    lv_chart_set_next(chart, ser1, 10);
-    lv_chart_set_next(chart, ser1, 10);
-    lv_chart_set_next(chart, ser1, 10);
-    lv_chart_set_next(chart, ser1, 10);
-    lv_chart_set_next(chart, ser1, 10);
-    lv_chart_set_next(chart, ser1, 30);
-    lv_chart_set_next(chart, ser1, 70);
-    lv_chart_set_next(chart, ser1, 90);
-
-    /*Directly set points on 'ser2'*/
-    ser2->points[0] = 90;
-    ser2->points[1] = 70;
-    ser2->points[2] = 65;
-    ser2->points[3] = 65;
-    ser2->points[4] = 65;
-    ser2->points[5] = 65;
-    ser2->points[6] = 65;
-    ser2->points[7] = 65;
-    ser2->points[8] = 65;
-    ser2->points[9] = 65;
-
-    lv_chart_refresh(chart);
+    chart = lv_chart_create(parent, NULL);
+    lv_obj_set_drag_parent(chart, true);
+    lv_chart_set_div_line_count(chart, 3, 0);
+    lv_chart_set_point_count(chart, 8);
+    lv_chart_set_type(chart, LV_CHART_TYPE_LINE);
+    lv_chart_set_y_tick_length(chart, 0, 0);
+    lv_chart_set_x_tick_length(chart, 0, 0);
+    lv_chart_set_y_tick_texts(chart, "600\n500\n400\n300\n200", 0, LV_CHART_AXIS_DRAW_LAST_TICK);
+    s1 = lv_chart_add_series(chart, lv_color_make(200,0,0));
+    s2 = lv_chart_add_series(chart, lv_color_make(0,200,0));
+    s3 = lv_chart_add_series(chart, lv_color_make(0,0,200));
+    s4 = lv_chart_add_series(chart, lv_color_make(200,200,0));
+    s5 = lv_chart_add_series(chart, lv_color_make(200,0,200));
 }
 
 bool UiTask::loop(void) {
     // receive queue datas
     if (this->recvMeasureDataQueue.remainNum() > 0) {
         this->recvMeasureDataQueue.receive(&this->latestMeasureData, false);
+        // test
+        // lv_chart_set_next(chart, s1, static_cast<int16_t>(this->latestMeasureData.gas));
+        // lv_chart_set_next(chart, s2, static_cast<int16_t>(this->latestMeasureData.humidity));
+        // lv_chart_set_next(chart, s3, static_cast<int16_t>(this->latestMeasureData.pressure));
+        // lv_chart_set_next(chart, s4, static_cast<int16_t>(this->latestMeasureData.tempature));
+        lv_chart_set_next(chart, s5, static_cast<int16_t>(this->latestMeasureData.visibleLux));
     }
     if (this->recvButtonStateQueue.remainNum() > 0) {
         this->recvButtonStateQueue.receive(&this->latestButtonState, false);

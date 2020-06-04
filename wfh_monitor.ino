@@ -116,7 +116,7 @@ void setup() {
     vSetErrorLed(errorLedPinNum, errorLedState);
     groveTask.createTask(256, tskIDLE_PRIORITY + 0);
     buttonTask.createTask(256, tskIDLE_PRIORITY + 0);
-    uiTask.createTask(1024, tskIDLE_PRIORITY + 1);
+    uiTask.createTask(4096, tskIDLE_PRIORITY + 1);
     vTaskStartScheduler();
 }
 
