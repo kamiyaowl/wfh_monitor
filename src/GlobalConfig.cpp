@@ -5,6 +5,9 @@ void GlobalConfig::init(void) {
     std::strcpy(reinterpret_cast<char*>(this->configVolatile.identifier), "WFH Monitor");
     std::strcpy(reinterpret_cast<char*>(this->configVolatile.date), __DATE__);
     std::strcpy(reinterpret_cast<char*>(this->configVolatile.time), __TIME__);
+
+    // non vilatileの値にも設定しておく
+    this->configNonVolatile = this->configVolatile;
 }
 
 const GlobalConfigDef& GlobalConfig::getRo(void) {
@@ -13,6 +16,10 @@ const GlobalConfigDef& GlobalConfig::getRo(void) {
 
 GlobalConfigDef& GlobalConfig::getRw(void) {
     return configVolatile;
+}
+
+void GlobalConfig::clear(void) {
+    this->onfigVolatile = this->configNonVolatile;
 }
 
 bool GlobalConfig::load(const char* filePath) {

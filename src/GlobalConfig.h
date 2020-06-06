@@ -58,6 +58,10 @@ class GlobalConfig {
         GlobalConfigDef& getRw(void);
 
         /**
+         * @brief init後の値、もしくはload/saveした後の値に巻き戻します
+         */
+        void clear(void);
+        /**
          * @brief configの内容をSD Cardから読み出します
          * 
          * @param filePath 読み込み先、省略した場合はconstructorで指定したパスに書き込みます
