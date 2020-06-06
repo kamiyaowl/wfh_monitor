@@ -52,7 +52,7 @@ bool GroveTask::loop(void) {
     this->sendQueue.send(&data);
 
 #ifdef WFH_MONITOR_ENABLE_SERIAL_PRINT_SENSOR_DATA
-    debugSerialPrint(this->serial, data);
+    debugSerialPrint(Serial, data);
 #endif
 
     return false; /**< no abort */

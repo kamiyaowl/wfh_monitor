@@ -23,18 +23,22 @@
 static constexpr uint32_t errorLedPinNum = 13;
 static constexpr uint32_t errorLedState =  LOW;
 
-static TwoWire &wireL = Wire;  // left  port
+static Serial_ serial = Serial; // to pc communicate
+static TwoWire& wireL = Wire;  // left  port
 
 /****************************** Hardware Library ******************************/
 #include <LovyanGFX.hpp>
 #include <Digital_Light_TSL2561.h>
 #include <seeed_bme680.h>
 #include <Seeed_Arduino_FreeRTOS.h>
+#include <Seeed_FS.h>
+#include "SD/Seeed_SD.h"
 
 static LGFX lcd;               
 static LGFX_Sprite sprite(&lcd);
 static TSL2561_CalculateLux &lightSensor = TSL2561; // TSL2561 Digital Light Sensor
 static Seeed_BME680 bme680((uint8_t)0x76);          // BME680 SlaveAddr=0x76
+static SDFS& sd = SD;
 
 /****************************** RTOS Queue ******************************/
 #include "src/IpcQueueDefs.h"
@@ -45,15 +49,26 @@ static Seeed_BME680 bme680((uint8_t)0x76);          // BME680 SlaveAddr=0x76
 static IpcQueue<MeasureData> measureDataQueue;
 static IpcQueue<ButtonEventData> buttonStateQueue;
 
+/****************************** RTOS SharedData ******************************/
+#include "src/SharedResource.h"
+#include "src/GlobalConfig.h"
+
+// RTOS Queueと同様semaphoreHandleがCPU DataCache上に配置されることを回避すること
+static SharedResource<Serial_> sharedSerial(serial);
+static SharedResource<SDFS> sharedSd(sd);
+
+static GlobalConfig config(sharedSd);
+static SharedResource<GlobalConfig> sharedConfig(config);
+
 /****************************** RTOS Task ******************************/
 #include "src/TaskBase.h"
 #include "src/GroveTask.h"
 #include "src/ButtonTask.h"
 #include "src/UiTask.h"
 
-static GroveTask groveTask(measureDataQueue, Serial, lightSensor, bme680);
-static ButtonTask<2> buttonTask(buttonStateQueue, Serial);
-static UiTask uiTask(measureDataQueue, buttonStateQueue, Serial, lcd, sprite);
+static GroveTask groveTask(measureDataQueue, lightSensor, bme680);
+static ButtonTask<2> buttonTask(buttonStateQueue);
+static UiTask uiTask(measureDataQueue, buttonStateQueue, lcd, sprite);
 
 /****************************** Setup Subfunction ******************************/
 
@@ -61,15 +76,24 @@ void setup() {
     // for por
     vNopDelayMS(1000);
 
+    /* setup implemented HW*/
     // setup peripheral
     Serial.begin(115200);
     wireL.begin();
 
     // setup display
-    // Grove Sensorとは異なりWio Terminalに付随しているHWなのでTask起動前に初期化する
     lcd.begin();
     lcd.setRotation(1);
 
+    // setup sd
+    sd.begin(SDCARD_SS_PIN, SDCARD_SPI);
+    File testFile = sd.open("test.txt", FILE_WRITE);
+    if (testFile) {
+        testFile.println("hello!");
+        testFile.close();
+    }
+
+    /* setup RTOS */
     // setup rtos queue
     measureDataQueue.createQueue(4);
     buttonStateQueue.createQueue(4);

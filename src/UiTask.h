@@ -23,15 +23,13 @@ class UiTask : public FpsControlTask {
          * 
          * @param recvMeasureDataQueue 測定データの受信Queue
          * @param recvButtonStateQueue ボタン入力の受信Queue
-         * @param serial UARTペリフェラル
          * @param lcd LCD Library、事前にinitは済ませておくこと(Wio Terminalに付随しているため)
          * @param sprite 
          */
         UiTask(IpcQueue<MeasureData>& recvMeasureDataQueue,
                IpcQueue<ButtonEventData>& recvButtonStateQueue,
-               Serial_& serial,
                LGFX& lcd,
-               LGFX_Sprite& sprite): counter(0), recvMeasureDataQueue(recvMeasureDataQueue), recvButtonStateQueue(recvButtonStateQueue), serial(serial), lcd(lcd), sprite(sprite), brightness(lcd) {}
+               LGFX_Sprite& sprite): counter(0), recvMeasureDataQueue(recvMeasureDataQueue), recvButtonStateQueue(recvButtonStateQueue), lcd(lcd), sprite(sprite), brightness(lcd) {}
 
         /**
         * @brief Destroy the Ui Task object
@@ -46,7 +44,6 @@ class UiTask : public FpsControlTask {
         ButtonEventData latestButtonState;
 
         uint32_t counter; /**< for debug*/
-        Serial_& serial; /**< for debug */
         LGFX& lcd;
         LGFX_Sprite& sprite;
         BrightnessControl<UiTaskBrightnessPoint, LGFX> brightness;

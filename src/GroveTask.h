@@ -18,11 +18,10 @@ class GroveTask : public FpsControlTask {
          * @brief Construct a new Grove Task object
          * 
          * @param sendQueue センサー測定値の送信Queue
-         * @param serial UARTペリフェラル
          * @param lightSensor 照度センサー。初期化はTask内で行う
          * @param bme680 温湿度、ガスセンサ。初期化はTask内で行う
          */
-        GroveTask(IpcQueue<MeasureData>& sendQueue, Serial_& serial, TSL2561_CalculateLux& lightSensor, Seeed_BME680& bme680): sendQueue(sendQueue), serial(serial), lightSensor(lightSensor), bme680(bme680) {}
+        GroveTask(IpcQueue<MeasureData>& sendQueue, TSL2561_CalculateLux& lightSensor, Seeed_BME680& bme680): sendQueue(sendQueue), lightSensor(lightSensor), bme680(bme680) {}
 
         /**
          * @brief Destroy the Grove Task object
@@ -32,7 +31,6 @@ class GroveTask : public FpsControlTask {
     protected:
         IpcQueue<MeasureData>& sendQueue; /**< 測定データの送信先 */
 
-        Serial_& serial; /**< for debug */
         TSL2561_CalculateLux& lightSensor;
         Seeed_BME680& bme680;
         void setup(void) override;

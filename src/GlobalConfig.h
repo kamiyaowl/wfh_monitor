@@ -3,6 +3,11 @@
 
 #include <cstdint>
 
+#include <Seeed_FS.h>
+#include "SD/Seeed_SD.h"
+
+#include "SharedResource.h"
+
 /**
  * @brief GlobalConfigで管理するデータ型を示します
  */
@@ -19,7 +24,7 @@ struct GlobalConfigDef {
  */
 class GlobalConfig {
     public:
-        GlobalConfig(void) {}
+        GlobalConfig(SharedResource<SDFS>& sharedSd): sharedSd(sharedSd) {}
         virtual ~GlobalConfig(void) {}
 
         /**
@@ -46,6 +51,7 @@ class GlobalConfig {
         // bool save(void); // TODO: FatFsクラスを渡せるようにする?
 
     protected:
+        SharedResource<SDFS>& sharedSd; /**< Semaphore, CriticalSectionの制定可能なSD Peripheral */
         GlobalConfigDef configVolatile; /**< 動作中に書き換わる領域 */
         GlobalConfigDef configNonVolatile; /**< Load時、またSave後に不揮発化されているオリジナルデータを格納する */
 };

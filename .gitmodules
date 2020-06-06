@@ -13,3 +13,9 @@
 [submodule "utils/uf2"]
 	path = utils/uf2
 	url = https://github.com/microsoft/uf2
+[submodule "lib/Seeed_Arduino_FS"]
+	path = lib/Seeed_Arduino_FS
+	url = https://github.com/Seeed-Studio/Seeed_Arduino_FS.git
+[submodule "lib/Seeed_Arduino_SFUD"]
+	path = lib/Seeed_Arduino_SFUD
+	url = https://github.com/Seeed-Studio/Seeed_Arduino_SFUD.git

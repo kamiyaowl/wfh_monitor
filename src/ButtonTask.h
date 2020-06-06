@@ -47,9 +47,8 @@ class ButtonTask : public FpsControlTask {
          * @brief Construct a new Button Task object
          * 
          * @param sendQueue ボタン入力の送信Queue
-         * @param serial UARTペリフェラル
          */
-        ButtonTask(IpcQueue<ButtonEventData>& sendQueue, Serial_& serial): sendQueue(sendQueue), serial(serial) {}
+        ButtonTask(IpcQueue<ButtonEventData>& sendQueue): sendQueue(sendQueue), serial(serial) {}
 
         /**
          * @brief Destroy the Button Task object
