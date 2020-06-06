@@ -19,7 +19,7 @@ GlobalConfigDef& GlobalConfig::getRw(void) {
 }
 
 void GlobalConfig::clear(void) {
-    this->onfigVolatile = this->configNonVolatile;
+    this->configVolatile = this->configNonVolatile;
 }
 
 bool GlobalConfig::load(const char* filePath) {
