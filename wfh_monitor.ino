@@ -8,6 +8,7 @@
  * @copyright Copyright (c) 2020 kamiyaowl
  * 
  */
+#include <cstdint>
 
 /****************************** Options ******************************/
 // #define WFH_MONITOR_ENABLE_SERIAL_PRINT_SENSOR_DATA
@@ -18,12 +19,13 @@
 #include <SPI.h>
 #include <Wire.h>
 
-#define ERROR_LED_PIN  13
-#define ERROR_LED_LIGHTUP_STATE LOW
+// FreeRTOSで異常発生時はd13のLEDを消灯させる
+static constexpr uint32_t errorLedPinNum = 13;
+static constexpr uint32_t errorLedState =  LOW;
 
 static TwoWire &wireL = Wire;  // left  port
 
-/****************************** Library ******************************/
+/****************************** Hardware Library ******************************/
 #include <LovyanGFX.hpp>
 #include <Digital_Light_TSL2561.h>
 #include <seeed_bme680.h>
@@ -53,24 +55,30 @@ static GroveTask groveTask(measureDataQueue, Serial, lightSensor, bme680);
 static ButtonTask<2> buttonTask(buttonStateQueue, Serial);
 static UiTask uiTask(measureDataQueue, buttonStateQueue, Serial, lcd, sprite);
 
-/****************************** Main ******************************/
+/****************************** Setup Subfunction ******************************/
+
 void setup() {
+    // for por
+    vNopDelayMS(1000);
+
     // setup peripheral
     Serial.begin(115200);
     wireL.begin();
 
-    // for por
-    vNopDelayMS(1000);
+    // setup display
+    // Grove Sensorとは異なりWio Terminalに付随しているHWなのでTask起動前に初期化する
+    lcd.begin();
+    lcd.setRotation(1);
 
     // setup rtos queue
     measureDataQueue.createQueue(4);
     buttonStateQueue.createQueue(4);
 
     // setup rtos task
-    vSetErrorLed(ERROR_LED_PIN, ERROR_LED_LIGHTUP_STATE);
-    groveTask.createTask(  256, tskIDLE_PRIORITY + 0);
-    buttonTask.createTask( 256, tskIDLE_PRIORITY + 0);
-    uiTask.createTask(     256, tskIDLE_PRIORITY + 1);
+    vSetErrorLed(errorLedPinNum, errorLedState);
+    groveTask.createTask(256, tskIDLE_PRIORITY + 0);
+    buttonTask.createTask(256, tskIDLE_PRIORITY + 0);
+    uiTask.createTask(4096, tskIDLE_PRIORITY + 1);
     vTaskStartScheduler();
 }
 

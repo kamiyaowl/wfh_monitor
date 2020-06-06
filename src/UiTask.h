@@ -18,11 +18,24 @@ static constexpr size_t UiTaskBrightnessPoint = 4;
  */
 class UiTask : public FpsControlTask {
     public:
+        /**
+         * @brief Construct a new Ui Task object
+         * 
+         * @param recvMeasureDataQueue 測定データの受信Queue
+         * @param recvButtonStateQueue ボタン入力の受信Queue
+         * @param serial UARTペリフェラル
+         * @param lcd LCD Library、事前にinitは済ませておくこと(Wio Terminalに付随しているため)
+         * @param sprite 
+         */
         UiTask(IpcQueue<MeasureData>& recvMeasureDataQueue,
                IpcQueue<ButtonEventData>& recvButtonStateQueue,
                Serial_& serial,
                LGFX& lcd,
                LGFX_Sprite& sprite): counter(0), recvMeasureDataQueue(recvMeasureDataQueue), recvButtonStateQueue(recvButtonStateQueue), serial(serial), lcd(lcd), sprite(sprite), brightness(lcd) {}
+
+        /**
+        * @brief Destroy the Ui Task object
+        */
          virtual ~UiTask(void) {}
         const char* getName(void) override { return "UiTask"; }
     protected:

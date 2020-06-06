@@ -3,12 +3,12 @@
 #include "SysTimer.h"
 #include "UiTask.h"
 
+
 void UiTask::setup(void) {
     // fps control
     this->setFps(30);
 
     // initialize lcd
-    this->lcd.init();
     this->lcd.setTextSize(1);
 
     // initial value
@@ -69,8 +69,8 @@ bool UiTask::loop(void) {
     this->lcd.printf("release   = %08x\n", this->latestButtonState.release);
     this->lcd.printf("timestamp = %u\n", this->latestButtonState.timestamp);
     this->lcd.printf("\n");
-
-    /* for debug */
+    
+    // for debug
     this->counter++;
 
     return false; /**< no abort */
