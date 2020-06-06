@@ -36,15 +36,6 @@ static LGFX_Sprite sprite(&lcd);
 static TSL2561_CalculateLux &lightSensor = TSL2561; // TSL2561 Digital Light Sensor
 static Seeed_BME680 bme680((uint8_t)0x76);          // BME680 SlaveAddr=0x76
 
-/****************************** LVGL ******************************/
-// reference: https://docs.lvgl.io/v7/en/html/porting/display.html
-#include <lvgl.h>
-
-static constexpr size_t lvglBufSize = LV_HOR_RES_MAX * 10;
-static lv_disp_buf_t dispBuf;
-static lv_color_t buf1[lvglBufSize]; // foreground buf
-static lv_color_t buf2[lvglBufSize]; // background buf(optional)
-
 /****************************** RTOS Queue ******************************/
 #include "src/IpcQueueDefs.h"
 #include "src/IpcQueue.h"
@@ -66,34 +57,6 @@ static UiTask uiTask(measureDataQueue, buttonStateQueue, Serial, lcd, sprite);
 
 /****************************** Setup Subfunction ******************************/
 
-/**
- * @brief LVGLを初期化します
- */
-static void setupLvgl(void) {
-    lv_init();
-    lv_disp_buf_init(&dispBuf, buf1, buf2, LV_HOR_RES_MAX * 10);
-
-    // initialize display
-    lv_disp_drv_t disp_drv;
-    lv_disp_drv_init(&disp_drv);
-    disp_drv.hor_res = 320;
-    disp_drv.ver_res = 240;
-    disp_drv.buffer = &dispBuf;
-    disp_drv.flush_cb = [](lv_disp_drv_t *disp, const lv_area_t *area, lv_color_t *color_p) {
-        const uint32_t w = (area->x2 - area->x1 + 1);
-        const uint32_t h = (area->y2 - area->y1 + 1);
-
-        lcd.startWrite();
-        lcd.setAddrWindow(area->x1, area->y1, w, h);
-        lcd.pushColors(&color_p->full, w * h, true);
-        lcd.endWrite();
-
-        lv_disp_flush_ready(disp);
-    };
-    lv_disp_drv_register(&disp_drv);
-}
-
-/****************************** Main ******************************/
 void setup() {
     // for por
     vNopDelayMS(1000);
@@ -106,7 +69,6 @@ void setup() {
     // Grove Sensorとは異なりWio Terminalに付随しているHWなのでTask起動前に初期化する
     lcd.begin();
     lcd.setRotation(1);
-    setupLvgl();
 
     // setup rtos queue
     measureDataQueue.createQueue(4);
