@@ -56,7 +56,15 @@ class GlobalConfig {
          * @return GlobalConfigDef& configVolatileの参照
          */
         GlobalConfigDef& getRw(void);
-        // bool load(void); // TODO: FatFsクラスを渡せるようにする?
+
+        /**
+         * @brief configの内容をSD Cardから読み出します
+         * 
+         * @param filePath 読み込み先、省略した場合はconstructorで指定したパスに書き込みます
+         * @return true 読み出し成功
+         * @return false 読み出し失敗
+         */
+        bool load(const char* filePath);
 
         /**
          * @brief 現在のconfigの内容をSD Cardに不揮発化します

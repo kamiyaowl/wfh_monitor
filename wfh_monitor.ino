@@ -14,7 +14,9 @@
 // #define WFH_MONITOR_ENABLE_SERIAL_PRINT_SENSOR_DATA
 // #define WFH_MONITOR_ENABLE_SERIAL_PRINT_BUTTON_DATA
 // #define WFH_MONITOR_ENABLE_SERIAL_PRINT_BRIGHTNESS_CONTROL
-static constexpr char* configPath = "wfhm.json";
+static constexpr uint32_t waitForPorMs        = 1000;
+static constexpr uint32_t waitForDebugPrintMs = 1000;
+static const char*        configPath          = "wfhm.json";
 
 /****************************** peripheral ******************************/
 #include <SPI.h>
@@ -75,32 +77,59 @@ static UiTask uiTask(measureDataQueue, buttonStateQueue, lcd, sprite);
 
 void setup() {
     // for por
-    delay(1000);
-
-    /* setup implemented HW */
-    // setup peripheral
-    Serial.begin(115200);
-    wireL.begin();
+    delay(waitForPorMs);
 
     // setup display
     lcd.begin();
+    lcd.setTextSize(1);
     lcd.setRotation(1);
+    lcd.println("boot WFH Monitor...\n");
+
+    /* setup implemented HW */
+    lcd.println("[INFO] setup peripheral\n");
+    Serial.begin(115200);
+    wireL.begin();
 
     // setup sd
+    lcd.println("[INFO] setup SD card\n");
     sd.begin(SDCARD_SS_PIN, SDCARD_SPI);
-    // test
-    config.save(nullptr);
+    
+    /* load configure from SD card */
+    lcd.println("[INFO] load config from SD card\n");
+    if (config.load(nullptr)) {
+        lcd.println("[INFO] done.\n");
+    } else {
+        lcd.println("[ERROR] failed, init default value.\n");
+        // initialize and save to SD card
+        config.init();
+
+        lcd.println("[INFO] save config to SD card\n");
+        if (config.save(nullptr)) {
+            lcd.println("[INFO] done.\n");
+        } else {
+            lcd.println("[ERROR] failed.\n");
+        }
+    }
 
     /* setup RTOS */
-    // setup rtos queue
+    lcd.println("[INFO] setup RTOS config\n");
+    vSetErrorLed(errorLedPinNum, errorLedState);
+
+    lcd.println("[INFO] setup RTOS queue\n");
     measureDataQueue.createQueue(4);
     buttonStateQueue.createQueue(4);
 
-    // setup rtos task
-    vSetErrorLed(errorLedPinNum, errorLedState);
+    lcd.println("[INFO] setup RTOS task\n");
     groveTask.createTask(256, tskIDLE_PRIORITY + 0);
     buttonTask.createTask(256, tskIDLE_PRIORITY + 0);
     uiTask.createTask(4096, tskIDLE_PRIORITY + 1);
+
+    /* keep debug print */
+    lcd.println("[INFO] done.\n");
+    delay(waitForDebugPrintMs);
+    lcd.clear();
+
+    /* start task */
     vTaskStartScheduler();
 }
 

@@ -15,6 +15,33 @@ GlobalConfigDef& GlobalConfig::getRw(void) {
     return configVolatile;
 }
 
+bool GlobalConfig::load(const char* filePath) {
+    const char* path = (filePath == nullptr) ? this->baseFilePath : filePath;
+    // baseFilePath == nullptrの対策
+    if (path == nullptr) {
+        return false;
+    }
+
+    // take mutex & crititcal sectionで読み込みは行う
+    bool result = false;
+    this->sharedSd.operateCritial([&](SDFS& sd) {
+        File f = sd.open(path, FILE_READ);
+        // Fileが開けなければ失敗
+        if (!f) return;
+        
+        // TODO: configVolatileの内容を読み出してParseする
+        // TODO: versionが異なる場合のMigrationも必要
+
+        // 成功していればconfigNonVolatileの内容を上書き
+        this->configNonVolatile = this->configVolatile;
+        // 成功
+        result = true;
+    });
+
+    // return result;
+    return false; // TODO: Parserの実装ができるまでは...
+}
+
 bool GlobalConfig::save(const char* filePath) {
     const char* path = (filePath == nullptr) ? this->baseFilePath : filePath;
     // baseFilePath == nullptrの対策
