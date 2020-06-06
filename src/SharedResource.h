@@ -31,11 +31,11 @@ class SharedResource {
         /**
          * @brief リソースロックした上でデータを操作します。セマフォを獲得するまでTaskは待機されます
          * 
-         * @tparam FUNC T&を受け取れる関数
+         * @tparam F void(T&) の型に一致する関数
          * @param functor 処理関数
          */
-        template<class FUNC>
-        void operate(FUNC functor) {
+        template<class F>
+        void operate(F functor) {
             xSemaphoreTake(this->semaphoreHandle, portMAX_DELAY);
             {
                 functor(this->value);
@@ -47,11 +47,11 @@ class SharedResource {
          * @brief リソースロックだけでなく、クリティカルセクションでデータ操作を行います
          * @note Tにハードウェアリソースに準ずるもの等を割り当てていて、操作を行う場合はoperateではなくこちらを利用します
          * 
-         * @tparam FUNC T&を受け取れる関数
+         * @tparam F void(T&) の型に一致する関数
          * @param functor 処理関数
          */
-        template<class FUNC>
-        void operateCritial(FUNC functor) {
+        template<class F>
+        void operateCritial(F functor) {
             xSemaphoreTake(this->semaphoreHandle, portMAX_DELAY);
             taskENTER_CRITICAL();
             {

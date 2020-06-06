@@ -14,6 +14,7 @@
 // #define WFH_MONITOR_ENABLE_SERIAL_PRINT_SENSOR_DATA
 // #define WFH_MONITOR_ENABLE_SERIAL_PRINT_BUTTON_DATA
 // #define WFH_MONITOR_ENABLE_SERIAL_PRINT_BRIGHTNESS_CONTROL
+static constexpr char* configPath = "wfhm.json";
 
 /****************************** peripheral ******************************/
 #include <SPI.h>
@@ -57,7 +58,7 @@ static IpcQueue<ButtonEventData> buttonStateQueue;
 static SharedResource<Serial_> sharedSerial(serial);
 static SharedResource<SDFS> sharedSd(sd);
 
-static GlobalConfig config(sharedSd);
+static GlobalConfig config(sharedSd, configPath);
 static SharedResource<GlobalConfig> sharedConfig(config);
 
 /****************************** RTOS Task ******************************/
@@ -74,9 +75,9 @@ static UiTask uiTask(measureDataQueue, buttonStateQueue, lcd, sprite);
 
 void setup() {
     // for por
-    vNopDelayMS(1000);
+    delay(1000);
 
-    /* setup implemented HW*/
+    /* setup implemented HW */
     // setup peripheral
     Serial.begin(115200);
     wireL.begin();
@@ -87,11 +88,8 @@ void setup() {
 
     // setup sd
     sd.begin(SDCARD_SS_PIN, SDCARD_SPI);
-    File testFile = sd.open("test.txt", FILE_WRITE);
-    if (testFile) {
-        testFile.println("hello!");
-        testFile.close();
-    }
+    // test
+    config.save(nullptr);
 
     /* setup RTOS */
     // setup rtos queue

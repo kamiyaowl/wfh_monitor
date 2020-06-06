@@ -15,7 +15,6 @@ struct GlobalConfigDef {
     uint8_t identifier[12]; /**< 識別子を埋め込みます "WFH Monitor\0" */
     uint8_t date[12]; /**< __DATE__を埋め込みます "Mmm dd yyyy\0"*/
     uint8_t time[12]; /**< __TIME__を埋め込みます "hh:mm:ss\0"*/
-    uint32_t checksum; /**< 検査用のchecksum, 不揮発化する際のみ使用する */
 };
 
 /**
@@ -24,7 +23,17 @@ struct GlobalConfigDef {
  */
 class GlobalConfig {
     public:
-        GlobalConfig(SharedResource<SDFS>& sharedSd): sharedSd(sharedSd) {}
+    /**
+     * @brief Construct a new Global Config object
+     * 
+     * @param sharedSd SDカードのペリフェラル
+     * @param configPath Globalな設定の保存先として使うFilePath
+     */
+        GlobalConfig(SharedResource<SDFS>& sharedSd, const char* configPath): sharedSd(sharedSd), baseFilePath(configPath) {}
+
+        /**
+         * @brief Destroy the Global Config object
+         */
         virtual ~GlobalConfig(void) {}
 
         /**
@@ -48,9 +57,18 @@ class GlobalConfig {
          */
         GlobalConfigDef& getRw(void);
         // bool load(void); // TODO: FatFsクラスを渡せるようにする?
-        // bool save(void); // TODO: FatFsクラスを渡せるようにする?
+
+        /**
+         * @brief 現在のconfigの内容をSD Cardに不揮発化します
+         * 
+         * @param filePath 書き込み先、省略した場合はconstructorで指定したパスに書き込みます
+         * @return true 保存成功
+         * @return false 保存失敗
+         */
+        bool save(const char* filePath);
 
     protected:
+        const char* baseFilePath;
         SharedResource<SDFS>& sharedSd; /**< Semaphore, CriticalSectionの制定可能なSD Peripheral */
         GlobalConfigDef configVolatile; /**< 動作中に書き換わる領域 */
         GlobalConfigDef configNonVolatile; /**< Load時、またSave後に不揮発化されているオリジナルデータを格納する */
