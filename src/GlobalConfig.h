@@ -192,6 +192,9 @@ class GlobalConfig {
                 File f = sd.open(path, FILE_WRITE);
                 // Fileが開けなければ失敗
                 if (!f) return;
+                // Date/Timeを最新ビルドのものに更新する
+                this->write(true, GlobalConfigKeys::Date , GlobalConfigDefaultValues::Date);
+                this->write(true, GlobalConfigKeys::Time , GlobalConfigDefaultValues::Time);
                 // configVolatileの内容を不揮発化する
                 const size_t byteWritten = serializeJson(this->configVolatile, f);
                 // File Handleはもう不要

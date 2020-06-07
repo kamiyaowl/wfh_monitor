@@ -20,6 +20,10 @@ static void printData(T& oStream, const MeasureData& data, bool isPrintTimestamp
     oStream.print(data.humidity);
     oStream.print(",");
     oStream.print(data.gas);
+    if (isPrintTimestamp) {
+        oStream.print(",");
+        oStream.print(data.timestamp);
+    }
     oStream.println(",");
 }
 
