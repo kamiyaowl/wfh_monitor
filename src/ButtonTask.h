@@ -1,6 +1,7 @@
 #ifndef BUTTONTASK_H
 #define BUTTONTASK_H
 
+#include "SharedResourceDefs.h"
 #include "IpcQueueDefs.h"
 #include "IpcQueue.h"
 #include "SysTimer.h"
@@ -46,9 +47,13 @@ class ButtonTask : public FpsControlTask {
         /**
          * @brief Construct a new Button Task object
          * 
+         * @param resource 共有リソース群
          * @param sendQueue ボタン入力の送信Queue
          */
-        ButtonTask(IpcQueue<ButtonEventData>& sendQueue): sendQueue(sendQueue), serial(serial) {}
+        ButtonTask(
+            const SharedResourceDefs& resource,
+            IpcQueue<ButtonEventData>& sendQueue
+        ): resource(resource), sendQueue(sendQueue) {}
 
         /**
          * @brief Destroy the Button Task object
@@ -56,12 +61,12 @@ class ButtonTask : public FpsControlTask {
         virtual ~ButtonTask(void) {}
         const char* getName(void) override { return "ButtonTask"; }
     protected:
+        const SharedResourceDefs& resource; /**< 共有リソース群 */
         IpcQueue<ButtonEventData>& sendQueue; /**< ボタン入力送信用 */
         uint32_t recents[N];  /**< debounce用の履歴値 */
         uint32_t recentsPtr;  /**< 次に書き込むrecentsのindex */
         uint32_t oldDebounce; /**< 前回のdebounce済の値 */
 
-        Serial_& serial; /**< for debug */
         void setup(void) override {
             // fps control
             this->setFps(60);

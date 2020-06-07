@@ -1,31 +1,42 @@
 #include "SysTimer.h"
 #include "GroveTask.h"
 
-#ifdef WFH_MONITOR_ENABLE_SERIAL_PRINT_SENSOR_DATA
 /**
- * @brief Arduinoのシリアルプロッタ用にセンサの値を出力します
+ * @brief センサの値を出力します
  * 
- * @param serial Serial Peripheral
+ * @tparam T print, printlnが使えるclass
+ * @param serial Serial Peripheral/ File Handle
  * @param data 測定したSensor Data
+ * @param isPrintTimestamp Timestampを出力するか
  */
-static void debugSerialPrint(Serial_& serial, const MeasureData& data) {
-    serial.print(data.visibleLux);
-    serial.print(",");
-    serial.print(data.tempature);
-    serial.print(",");
-    serial.print(data.pressure);
-    serial.print(",");
-    serial.print(data.humidity);
-    serial.print(",");
-    serial.print(data.gas);
-    serial.println(",");
+template<typename T>
+static void printData(T& oStream, const MeasureData& data, bool isPrintTimestamp) {
+    oStream.print(data.visibleLux);
+    oStream.print(",");
+    oStream.print(data.tempature);
+    oStream.print(",");
+    oStream.print(data.pressure);
+    oStream.print(",");
+    oStream.print(data.humidity);
+    oStream.print(",");
+    oStream.print(data.gas);
+    oStream.println(",");
 }
-#endif /* WFH_MONITOR_ENABLE_SERIAL_PRINT_SENSOR_DATA */
 
 
 void GroveTask::setup(void) {
-    // fps control
-    this->setFps(2);
+    // configure
+    this->resource.config.operate([&](GlobalConfig<FixedConfig::ConfigAllocateSize>& config){
+        // fps
+        auto fps = GlobalConfigDefaultValues::GroveTaskFps;
+        config.read(GlobalConfigKeys::GroveTaskFps, fps);
+        this->setFps(fps);
+        // debug print
+        this->isPrintSerial = GlobalConfigDefaultValues::GroveTaskPrintSerial;
+        this->isPrintFile = GlobalConfigDefaultValues::GroveTaskPrintFile;
+        config.read(GlobalConfigKeys::GroveTaskPrintSerial, this->isPrintSerial);
+        config.read(GlobalConfigKeys::GroveTaskPrintFile, this->isPrintFile);
+    });
 
     // initialize sensor
     // I2C Deviceで問題があったときにsetupでハングアップしないようにタスク内で初期化する
@@ -51,9 +62,23 @@ bool GroveTask::loop(void) {
     };
     this->sendQueue.send(&data);
 
-#ifdef WFH_MONITOR_ENABLE_SERIAL_PRINT_SENSOR_DATA
-    debugSerialPrint(Serial, data);
-#endif
+    // debug print
+    if (this->isPrintSerial) {
+        this->resource.serial.operateCritial([&](Serial_& serial){
+            printData(serial, data, false);
+        });
+    }
+    if (this->isPrintFile) {
+        this->resource.sd.operateCritial([&](SDFS& sd){
+            File f = sd.open(FixedConfig::GroveTaskPrintFilePath, FILE_APPEND);
+            // 開けなければ失敗
+            if (!f) return;
+            // 1行追記
+            printData(f, data, true);
+            // 終わり
+            f.close();
+        });
+    }
 
     return false; /**< no abort */
 }

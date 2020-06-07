@@ -20,6 +20,8 @@ namespace GlobalConfigKeys {
     static constexpr char* GroveTaskFps           = "groveTaskFps";
     static constexpr char* ButtonTaskFps          = "buttonTaskFps";
     static constexpr char* UiTaskFps              = "uiTaskFps";
+    static constexpr char* GroveTaskPrintSerial   = "groveTaskPrintSerial";
+    static constexpr char* GroveTaskPrintFile     = "groveTaskPrintFile";
     static constexpr char* BrightnessHoldMs       = "brightnessHoldMs";
     static constexpr char* BrightnessTransitionMs = "brightnessTransitionMs";
 }
@@ -34,6 +36,8 @@ namespace GlobalConfigDefaultValues {
     static constexpr uint32_t GroveTaskFps           = 2;
     static constexpr uint32_t ButtonTaskFps          = 60;
     static constexpr uint32_t UiTaskFps              = 30;
+    static constexpr bool     GroveTaskPrintSerial   = false;
+    static constexpr bool     GroveTaskPrintFile     = false;
     static constexpr uint32_t BrightnessHoldMs       = 4000;
     static constexpr uint32_t BrightnessTransitionMs = 2000;
 }
@@ -109,6 +113,8 @@ class GlobalConfig {
             this->write(!isMigrate, GlobalConfigKeys::GroveTaskFps            , GlobalConfigDefaultValues::GroveTaskFps);
             this->write(!isMigrate, GlobalConfigKeys::ButtonTaskFps           , GlobalConfigDefaultValues::ButtonTaskFps);
             this->write(!isMigrate, GlobalConfigKeys::UiTaskFps               , GlobalConfigDefaultValues::UiTaskFps);
+            this->write(!isMigrate, GlobalConfigKeys::GroveTaskPrintSerial    , GlobalConfigDefaultValues::GroveTaskPrintSerial);
+            this->write(!isMigrate, GlobalConfigKeys::GroveTaskPrintFile      , GlobalConfigDefaultValues::GroveTaskPrintFile);
             this->write(!isMigrate, GlobalConfigKeys::BrightnessHoldMs        , GlobalConfigDefaultValues::BrightnessHoldMs);
             this->write(!isMigrate, GlobalConfigKeys::BrightnessTransitionMs  , GlobalConfigDefaultValues::BrightnessTransitionMs);
 

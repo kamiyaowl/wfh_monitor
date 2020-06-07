@@ -5,6 +5,8 @@
 #include <LovyanGFX.hpp>
 
 #include "SysTimer.h"
+
+#include "SharedResourceDefs.h"
 #include "IpcQueueDefs.h"
 #include "IpcQueue.h"
 
@@ -22,15 +24,19 @@ class UiTask : public FpsControlTask {
         /**
          * @brief Construct a new Ui Task object
          * 
+         * @param resource 共有リソース群
          * @param recvMeasureDataQueue 測定データの受信Queue
          * @param recvButtonStateQueue ボタン入力の受信Queue
          * @param lcd LCD Library、事前にinitは済ませておくこと(Wio Terminalに付随しているため)
          * @param sprite 
          */
-        UiTask(IpcQueue<MeasureData>& recvMeasureDataQueue,
-               IpcQueue<ButtonEventData>& recvButtonStateQueue,
-               LGFX& lcd,
-               LGFX_Sprite& sprite): counter(0), recvMeasureDataQueue(recvMeasureDataQueue), recvButtonStateQueue(recvButtonStateQueue), lcd(lcd), sprite(sprite), brightness(lcd) {}
+        UiTask(
+            const SharedResourceDefs& resource,
+            IpcQueue<MeasureData>& recvMeasureDataQueue,
+            IpcQueue<ButtonEventData>& recvButtonStateQueue,
+            LGFX& lcd,
+            LGFX_Sprite& sprite
+        ): resource(resource), counter(0), recvMeasureDataQueue(recvMeasureDataQueue), recvButtonStateQueue(recvButtonStateQueue), lcd(lcd), sprite(sprite), brightness(lcd) {}
 
         /**
         * @brief Destroy the Ui Task object
@@ -38,6 +44,7 @@ class UiTask : public FpsControlTask {
          virtual ~UiTask(void) {}
         const char* getName(void) override { return "UiTask"; }
     protected:
+        const SharedResourceDefs& resource; /**< 共有リソース群 */
         IpcQueue<MeasureData>& recvMeasureDataQueue; /**< 測定データ受信用 */
         IpcQueue<ButtonEventData>& recvButtonStateQueue; /**< ボタン入力受信用 */
 
