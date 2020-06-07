@@ -57,8 +57,26 @@ class UiTask : public FpsControlTask {
         BrightnessControl<N, LGFX> brightness;
 
         void setup(void) override {
-            // fps control
-            this->setFps(30);
+            // configure
+            static constexpr BrightnessSetting brightnessSetting[N] = { // TODO: 設定ファイルから色々できるといいなぁ...
+                { .visibleLux =  50.0f , .brightness = 20 },
+                { .visibleLux = 120.0f , .brightness = 100 },
+                { .visibleLux = 180.0f , .brightness = 200 },
+                { .visibleLux = FLT_MAX, .brightness = 255 },
+            };
+            this->resource.config.operate([&](GlobalConfig<FixedConfig::ConfigAllocateSize>& config){
+                // fps
+                auto fps = GlobalConfigDefaultValues::UiTaskFps;
+                config.read(GlobalConfigKeys::UiTaskFps, fps);
+                this->setFps(fps);
+                // auto brightness
+                auto holdMs = GlobalConfigDefaultValues::BrightnessHoldMs;
+                auto transitionMs = GlobalConfigDefaultValues::BrightnessTransitionMs;
+                config.read(GlobalConfigKeys::UiTaskFps, holdMs);
+                config.read(GlobalConfigKeys::UiTaskFps, transitionMs);
+
+                this->brightness.configure(true, holdMs, transitionMs, brightnessSetting);
+            });
 
             // initialize lcd
             this->lcd.setTextSize(1);
@@ -74,15 +92,6 @@ class UiTask : public FpsControlTask {
             this->latestButtonState.debounce = 0x0;
             this->latestButtonState.push = 0x0;
             this->latestButtonState.release = 0x0;
-
-            // initialize submodules
-            static constexpr BrightnessSetting brightnessSetting[N] = { // TODO: 設定ファイルから色々できるといいなぁ...
-                { .visibleLux =  50.0f , .brightness = 20 },
-                { .visibleLux = 120.0f , .brightness = 100 },
-                { .visibleLux = 180.0f , .brightness = 200 },
-                { .visibleLux = FLT_MAX, .brightness = 255 },
-            };
-            this->brightness.configure(true, 4000, 2000, brightnessSetting);
         }
         bool loop(void) override {
             // receive queue datas

@@ -8,33 +8,6 @@
 
 #include "FpsControlTask.h"
 
-#ifdef WFH_MONITOR_ENABLE_SERIAL_PRINT_BUTTON_DATA
-/**
- * @brief Arduinoのシリアルプロッタ用にボタン入力の値を出力します
- * 
- * @param serial Serial Peripheral
- * @param data 測定したButton Data Data
- */
-static void debugSerialPrint(Serial_& serial, const uint32_t& data) {
-    serial.print((data & ButtonState::Up)    != 0x0);
-    serial.print(",");
-    serial.print((data & ButtonState::Down)  != 0x0);
-    serial.print(",");
-    serial.print((data & ButtonState::Left)  != 0x0);
-    serial.print(",");
-    serial.print((data & ButtonState::Right) != 0x0);
-    serial.print(",");
-    serial.print((data & ButtonState::Press) != 0x0);
-    serial.print(",");
-    serial.print((data & ButtonState::A)     != 0x0);
-    serial.print(",");
-    serial.print((data & ButtonState::B)     != 0x0);
-    serial.print(",");
-    serial.print((data & ButtonState::C)     != 0x0);
-    serial.println(",");
-}
-#endif /* WFH_MONITOR_ENABLE_SERIAL_PRINT_BUTTON_DATA */
-
 /**
  * @brief Wio Terminalについている上部ボタンと4方向ボタンの値を取得するタスクです
  * 
@@ -68,8 +41,13 @@ class ButtonTask : public FpsControlTask {
         uint32_t oldDebounce; /**< 前回のdebounce済の値 */
 
         void setup(void) override {
-            // fps control
-            this->setFps(60);
+            // configure
+            this->resource.config.operate([&](GlobalConfig<FixedConfig::ConfigAllocateSize>& config){
+                // fps
+                auto fps = GlobalConfigDefaultValues::ButtonTaskFps;
+                config.read(GlobalConfigKeys::ButtonTaskFps, fps);
+                this->setFps(fps);
+            });
 
             // port initialize
             pinMode(WIO_5S_UP,    INPUT_PULLUP);
@@ -132,10 +110,6 @@ class ButtonTask : public FpsControlTask {
 
             // update oldDebounce
             this->oldDebounce = currentDebounce;
-
-#ifdef WFH_MONITOR_ENABLE_SERIAL_PRINT_BUTTON_DATA
-    debugSerialPrint(this->serial, currentDebounce);
-#endif /* WFH_MONITOR_ENABLE_SERIAL_PRINT_BUTTON_DATA */
 
             return false; /**< no abort */            
         }
