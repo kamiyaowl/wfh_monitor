@@ -10,24 +10,32 @@
  */
 #include <cstdint>
 
-/****************************** Options ******************************/
-// #define WFH_MONITOR_ENABLE_SERIAL_PRINT_SENSOR_DATA
-// #define WFH_MONITOR_ENABLE_SERIAL_PRINT_BUTTON_DATA
-// #define WFH_MONITOR_ENABLE_SERIAL_PRINT_BRIGHTNESS_CONTROL
-static constexpr uint32_t waitForPorMs        = 1000;
-static constexpr uint32_t waitForDebugPrintMs = 1000;
-static constexpr char*    configPath          = "wfhm.json";
-static constexpr uint32_t configAllocateSize  = 1024;
+/****************************** Config(Fixed) ******************************/
+/**
+ * @brief コンパイル時に設定が必要な定数群です
+ */
+namespace FixedConfig {
+    static constexpr uint8_t  Bme680SlaveAddr          = 0x76;          /**< BME680のSlave Addr */
+    static constexpr uint32_t WaitForPorMs             = 1000;          /**< POR後の待機時間 */
+    static constexpr uint32_t SerialBaudrate           = 115200;        /**< UART baudrate */
+    static constexpr char*    ConfigPath               = "wfhm.json";   /**< SD Cardのconfig保存先 */
+    static constexpr size_t   ConfigAllocateSize       = 1024;          /**< config格納用に使用する領域サイズ(configの内容が大きい場合は要調整) */
+    static constexpr uint32_t ErrorLedPinNum           = 13;            /**< RTOSでエラー発生時のLED Pin番号 */
+    static constexpr uint32_t ErrorLedState            = LOW;           /**< RTOSでエラー発生時のLEDの状態 */
+    static constexpr size_t   DefaultQueueSize         = 4;             /**< SensorData/ButtonStateのQueue Size */
+    static constexpr size_t   GroveTaskStackSize       = 256;           /**< GroveTaskのStackSize */
+    static constexpr size_t   ButtonTaskStackSize      = 256;           /**< ButtonTaskのStackSize */
+    static constexpr size_t   UiTaskStackSize          = 4096;          /**< UiTaskのStackSize */
+    static constexpr uint32_t WaitForDebugPrintMs      = 1000;          /**< Task開始直前の待機時間 */
+    static constexpr size_t   ButtonTaskDebounceNum    = 2;             /**< ButtonTaskで保持する履歴数 */
+    static constexpr size_t   UiTaskBrightnessKeyPoint = 4;             /**< 画面自動調光の設定KeyPoint数 */
+}
 
-/****************************** peripheral ******************************/
+/****************************** Peripheral ******************************/
 #include <SPI.h>
 #include <Wire.h>
 
-// FreeRTOSで異常発生時はd13のLEDを消灯させる
-static constexpr uint32_t errorLedPinNum = 13;
-static constexpr uint32_t errorLedState =  LOW;
-
-static Serial_ serial = Serial; // to pc communicate
+static Serial_ serial = Serial;
 static TwoWire& wireL = Wire;  // left  port
 
 /****************************** Hardware Library ******************************/
@@ -41,7 +49,7 @@ static TwoWire& wireL = Wire;  // left  port
 static LGFX lcd;               
 static LGFX_Sprite sprite(&lcd);
 static TSL2561_CalculateLux &lightSensor = TSL2561; // TSL2561 Digital Light Sensor
-static Seeed_BME680 bme680((uint8_t)0x76);          // BME680 SlaveAddr=0x76
+static Seeed_BME680 bme680(FixedConfig::Bme680SlaveAddr);          // BME680 SlaveAddr=0x76
 static SDFS& sd = SD;
 
 /****************************** RTOS Queue ******************************/
@@ -62,8 +70,8 @@ static IpcQueue<ButtonEventData> buttonStateQueue;
 static SharedResource<Serial_> sharedSerial(serial);
 static SharedResource<SDFS> sharedSd(sd);
 
-static GlobalConfig<configAllocateSize> config(sharedSd, configPath);
-static SharedResource<GlobalConfig<configAllocateSize>> sharedConfig(config);
+static GlobalConfig<FixedConfig::ConfigAllocateSize> config(sharedSd, FixedConfig::ConfigPath);
+static SharedResource<GlobalConfig<FixedConfig::ConfigAllocateSize>> sharedConfig(config);
 
 /****************************** RTOS Task ******************************/
 #include "src/TaskBase.h"
@@ -72,14 +80,14 @@ static SharedResource<GlobalConfig<configAllocateSize>> sharedConfig(config);
 #include "src/UiTask.h"
 
 static GroveTask groveTask(measureDataQueue, lightSensor, bme680);
-static ButtonTask<2> buttonTask(buttonStateQueue);
-static UiTask uiTask(measureDataQueue, buttonStateQueue, lcd, sprite);
+static ButtonTask<FixedConfig::ButtonTaskDebounceNum> buttonTask(buttonStateQueue);
+static UiTask<FixedConfig::UiTaskBrightnessKeyPoint> uiTask(measureDataQueue, buttonStateQueue, lcd, sprite);
 
 /****************************** Setup Subfunction ******************************/
 
 void setup() {
     // for por
-    delay(waitForPorMs);
+    delay(FixedConfig::WaitForPorMs);
 
     // setup display
     lcd.begin();
@@ -89,7 +97,7 @@ void setup() {
 
     /* setup implemented HW */
     lcd.println("[INFO] setup peripheral\n");
-    Serial.begin(115200);
+    Serial.begin(FixedConfig::SerialBaudrate);
     wireL.begin();
 
     // setup sd
@@ -99,7 +107,7 @@ void setup() {
     /* load configure from SD card */
     lcd.println("[INFO] load config from SD card\n");
 
-    DeserializationError desError; // TODO: Error表示を出すか検討
+    DeserializationError desError;
     if (config.load(nullptr, desError)) {
         lcd.println("[INFO] done.\n");
     } else {
@@ -117,20 +125,20 @@ void setup() {
 
     /* setup RTOS */
     lcd.println("[INFO] setup RTOS config\n");
-    vSetErrorLed(errorLedPinNum, errorLedState);
+    vSetErrorLed(FixedConfig::ErrorLedPinNum, FixedConfig::ErrorLedState);
 
     lcd.println("[INFO] setup RTOS queue\n");
-    measureDataQueue.createQueue(4);
-    buttonStateQueue.createQueue(4);
+    measureDataQueue.createQueue(FixedConfig::DefaultQueueSize);
+    buttonStateQueue.createQueue(FixedConfig::DefaultQueueSize);
 
     lcd.println("[INFO] setup RTOS task\n");
-    groveTask.createTask(256, tskIDLE_PRIORITY + 0);
-    buttonTask.createTask(256, tskIDLE_PRIORITY + 0);
-    uiTask.createTask(4096, tskIDLE_PRIORITY + 1);
+    groveTask.createTask(FixedConfig::GroveTaskStackSize, tskIDLE_PRIORITY + 0);
+    buttonTask.createTask(FixedConfig::ButtonTaskStackSize, tskIDLE_PRIORITY + 0);
+    uiTask.createTask(FixedConfig::UiTaskStackSize, tskIDLE_PRIORITY + 1);
 
     /* keep debug print */
     lcd.println("[INFO] done.\n");
-    delay(waitForDebugPrintMs);
+    delay(FixedConfig::WaitForDebugPrintMs);
     lcd.clear();
 
     /* start task */

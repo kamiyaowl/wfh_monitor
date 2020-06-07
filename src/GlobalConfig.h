@@ -11,6 +11,34 @@
 #include "SharedResource.h"
 
 /**
+ * @brief GlobalConfigで使用するJson Key一覧です
+ */
+namespace GlobalConfigKeys {
+    static constexpr char* Identifier             = "identifier";
+    static constexpr char* Date                   = "date";
+    static constexpr char* Time                   = "time";
+    static constexpr char* GroveTaskFps           = "groveTaskFps";
+    static constexpr char* ButtonTaskFps          = "buttonTaskFps";
+    static constexpr char* UiTaskFps              = "uiTaskFps";
+    static constexpr char* BrightnessHoldMs       = "brightnessHoldMs";
+    static constexpr char* BrightnessTransitionMs = "brightnessTransitionMs";
+}
+
+/**
+ * @brief GlobalConfigで使用する初期値一覧です
+ */
+namespace GlobalConfigDefaultValues {
+    static constexpr char*    Identifier             = "WFH Monitor";
+    static constexpr char*    Date                   = __DATE__;
+    static constexpr char*    Time                   = __TIME__;
+    static constexpr uint32_t GroveTaskFps           = 2;
+    static constexpr uint32_t ButtonTaskFps          = 60;
+    static constexpr uint32_t UiTaskFps              = 30;
+    static constexpr uint32_t BrightnessHoldMs       = 4000;
+    static constexpr uint32_t BrightnessTransitionMs = 2000;
+}
+
+/**
  * @brief WFH Terminalの設定データのInit/Read/Modify/Save/Loadを行うクラスです
  * @note TaskBaseを継承したクラスで操作する場合はSharedResouceクラスでラップして処理すること、また配置にはCPU DataCacheを考慮すること
  * 
@@ -33,47 +61,61 @@ class GlobalConfig {
         virtual ~GlobalConfig(void) {}
 
         /**
+         * @brief 指定された値をconfigVolatileに書き込みます
+         * 
+         * @tparam T 書き込むデータの型
+         * @param isOverwrite すでに値がセットされている場合でも上書きする場合はtrue
+         * @param key セット対象のKey
+         * @param value セットする値
+         */
+        template<typename T>
+        void write(bool isOverwrite, const char* key, T& value) {
+            if (isOverwrite || !this->configVolatile.containsKey(key)) { 
+                this->configVolatile[key] = value;
+            }
+        }
+
+        /**
+         * @brief 指定されたKeyの値を読み出します
+         * 
+         * @tparam T 読み出す型
+         * @param key 読み出し対象のKey
+         * @param value 読みだしたデータの書き込み先、Keyが存在しない場合は操作しません
+         * @return true 読み出し成功
+         * @return false 読み出し失敗
+         */
+        template<typename T>
+        bool read(const char* key, T& value) {
+            // Keyが存在しない
+            if (!this->configVolatile.containsKey(key)) {
+                return false;
+            }
+            // 値を読み出す
+            value = this->configVolatile[key];
+            return true;
+        }
+        /**
          * @brief すべての値を初期値で上書きします
          * @param isMigrate 存在しない値のみを上書きする場合はtrue
          * 
          * @note 完全新規のconfigを生成する場合はisMigrate=falseで実行する
          */
         void init(bool isMigrate) {
-            // 更新条件を満たすときだけconfigVolatileを書き換える
-            auto f = [&](const char* key, auto value){
-                if (!isMigrate || !this->configVolatile.containsKey(key)) { 
-                    this->configVolatile[key] = value;
-                }
-            };
             // 一通り必要な初期値をセット
-            f("identifier", "WFH Monitor");
-            f("date"      , __DATE__);
-            f("time"      , __TIME__);
+            // TODO: もう少しいい感じに書けるかも。Keys/DefaultValuesを内包する型パラメータの指定は考察が必要
+            this->write(!isMigrate, GlobalConfigKeys::Identifier              , GlobalConfigDefaultValues::Identifier);
+            this->write(!isMigrate, GlobalConfigKeys::Date                    , GlobalConfigDefaultValues::Date);
+            this->write(!isMigrate, GlobalConfigKeys::Time                    , GlobalConfigDefaultValues::Time);
+            this->write(!isMigrate, GlobalConfigKeys::GroveTaskFps            , GlobalConfigDefaultValues::GroveTaskFps);
+            this->write(!isMigrate, GlobalConfigKeys::ButtonTaskFps           , GlobalConfigDefaultValues::ButtonTaskFps);
+            this->write(!isMigrate, GlobalConfigKeys::UiTaskFps               , GlobalConfigDefaultValues::UiTaskFps);
+            this->write(!isMigrate, GlobalConfigKeys::BrightnessHoldMs        , GlobalConfigDefaultValues::BrightnessHoldMs);
+            this->write(!isMigrate, GlobalConfigKeys::BrightnessTransitionMs  , GlobalConfigDefaultValues::BrightnessTransitionMs);
 
-            // migrationでなければNonVolatile側にも反映
+            // migrationでなければNonVolatile側にも反映(this->clear()対策)
             if (!isMigrate) {
                 this->configNonVolatile = this->configVolatile;
             }
-        }
-
-        /**
-         * @brief configの参照を取得します
-         * @note この参照を不用意に引き回してはいけません。SharedResouceを使い排他制御している範囲でLifetimeを持つように制御してください
-         * 
-         * @return const GlobalConfigDef&  configVolatileの参照
-         */
-        const StaticJsonDocument<N>& getRo(void) {
-            return configVolatile;
-        }
-
-        /**
-         * @brief configの書き換え可能な参照を取得します
-         * @note この参照を不用意に引き回してはいけません。SharedResouceを使い排他制御している範囲でLifetimeを持つように制御してください
-         * 
-         * @return GlobalConfigDef& configVolatileの参照
-         */
-        StaticJsonDocument<N>& getRw(void) {
-            return configVolatile;
         }
 
         /**
