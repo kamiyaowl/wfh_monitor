@@ -19,3 +19,6 @@
 [submodule "lib/Seeed_Arduino_SFUD"]
 	path = lib/Seeed_Arduino_SFUD
 	url = https://github.com/Seeed-Studio/Seeed_Arduino_SFUD.git
+[submodule "lib/ArduinoJson"]
+	path = lib/ArduinoJson
+	url = https://github.com/bblanchon/ArduinoJson.git

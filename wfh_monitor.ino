@@ -16,7 +16,8 @@
 // #define WFH_MONITOR_ENABLE_SERIAL_PRINT_BRIGHTNESS_CONTROL
 static constexpr uint32_t waitForPorMs        = 1000;
 static constexpr uint32_t waitForDebugPrintMs = 1000;
-static const char*        configPath          = "wfhm.json";
+static constexpr char*    configPath          = "wfhm.json";
+static constexpr uint32_t configAllocateSize  = 1024;
 
 /****************************** peripheral ******************************/
 #include <SPI.h>
@@ -53,6 +54,7 @@ static IpcQueue<MeasureData> measureDataQueue;
 static IpcQueue<ButtonEventData> buttonStateQueue;
 
 /****************************** RTOS SharedData ******************************/
+#include <ArduinoJson.h>
 #include "src/SharedResource.h"
 #include "src/GlobalConfig.h"
 
@@ -60,8 +62,8 @@ static IpcQueue<ButtonEventData> buttonStateQueue;
 static SharedResource<Serial_> sharedSerial(serial);
 static SharedResource<SDFS> sharedSd(sd);
 
-static GlobalConfig config(sharedSd, configPath);
-static SharedResource<GlobalConfig> sharedConfig(config);
+static GlobalConfig<configAllocateSize> config(sharedSd, configPath);
+static SharedResource<GlobalConfig<configAllocateSize>> sharedConfig(config);
 
 /****************************** RTOS Task ******************************/
 #include "src/TaskBase.h"
@@ -96,12 +98,14 @@ void setup() {
     
     /* load configure from SD card */
     lcd.println("[INFO] load config from SD card\n");
-    if (config.load(nullptr)) {
+
+    DeserializationError desError; // TODO: Error表示を出すか検討
+    if (config.load(nullptr, desError)) {
         lcd.println("[INFO] done.\n");
     } else {
         lcd.println("[ERROR] failed, init default value.\n");
         // initialize and save to SD card
-        config.init();
+        config.init(false);
 
         lcd.println("[INFO] save config to SD card\n");
         if (config.save(nullptr)) {
