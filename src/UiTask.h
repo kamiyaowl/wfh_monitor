@@ -72,8 +72,8 @@ class UiTask : public FpsControlTask {
                 // auto brightness
                 auto holdMs = GlobalConfigDefaultValues::BrightnessHoldMs;
                 auto transitionMs = GlobalConfigDefaultValues::BrightnessTransitionMs;
-                config.read(GlobalConfigKeys::UiTaskFps, holdMs);
-                config.read(GlobalConfigKeys::UiTaskFps, transitionMs);
+                config.read(GlobalConfigKeys::BrightnessHoldMs, holdMs);
+                config.read(GlobalConfigKeys::BrightnessTransitionMs, transitionMs);
 
                 this->brightness.configure(true, holdMs, transitionMs, brightnessSetting);
             });
