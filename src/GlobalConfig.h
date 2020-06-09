@@ -17,6 +17,14 @@ namespace GlobalConfigKeys {
     static constexpr char* Identifier             = "identifier";
     static constexpr char* Date                   = "date";
     static constexpr char* Time                   = "time";
+    static constexpr char* UseWiFi                = "useWiFi";
+    static constexpr char* ApSsid                 = "apSsid";
+    static constexpr char* ApPassWord             = "apPassword";
+    static constexpr char* ApTimeoutMs            = "apTimeoutMs";
+    static constexpr char* UseAmbient             = "useAmbient";
+    static constexpr char* AmbientIntervalMs      = "AmbientIntervalMs";
+    static constexpr char* AmbientChannelId       = "ambientChanelId";
+    static constexpr char* AmbientWriteKey        = "ambientWriteKey";
     static constexpr char* GroveTaskFps           = "groveTaskFps";
     static constexpr char* ButtonTaskFps          = "buttonTaskFps";
     static constexpr char* UiTaskFps              = "uiTaskFps";
@@ -33,6 +41,14 @@ namespace GlobalConfigDefaultValues {
     static constexpr char*    Identifier             = "WFH Monitor";
     static constexpr char*    Date                   = __DATE__;
     static constexpr char*    Time                   = __TIME__;
+    static constexpr bool     UseWiFi                = false;
+    static constexpr char*    ApSsid                 = "your ap ssid";
+    static constexpr char*    ApPassWord             = "your ap password";
+    static constexpr uint32_t ApTimeoutMs            = 30000;
+    static constexpr bool     UseAmbient             = true;
+    static constexpr uint32_t AmbientIntervalMs      = 60000;
+    static constexpr uint32_t AmbientChannelId       = 0;
+    static constexpr char*    AmbientWriteKey        = "your writekey";
     static constexpr uint32_t GroveTaskFps           = 2;
     static constexpr uint32_t ButtonTaskFps          = 60;
     static constexpr uint32_t UiTaskFps              = 30;
@@ -98,6 +114,25 @@ class GlobalConfig {
             value = this->configVolatile[key];
             return true;
         }
+
+        /**
+         * @brief 指定されたKeyのポインタを取得します。文字列を読み出す場合などに利用してください
+         * @note 読みだしたPointerのLifetimeは必要最低限にとどめてください。読みだした時点のスコープ以上に広げないことを推奨します
+         * 
+         * @tparam T 読み出す型
+         * @param key 読み出し対象のKey
+         * @return const T* 読み出し失敗
+         */
+        template<typename T>
+        const T* getReadPtr(const char* key) {
+            // Keyが存在しない
+            if (!this->configVolatile.containsKey(key)) {
+                return nullptr;
+            }
+            
+            return &this->configVolatile[key];
+        }
+
         /**
          * @brief すべての値を初期値で上書きします
          * @param isMigrate 存在しない値のみを上書きする場合はtrue
@@ -110,6 +145,14 @@ class GlobalConfig {
             this->write(!isMigrate, GlobalConfigKeys::Identifier              , GlobalConfigDefaultValues::Identifier);
             this->write(!isMigrate, GlobalConfigKeys::Date                    , GlobalConfigDefaultValues::Date);
             this->write(!isMigrate, GlobalConfigKeys::Time                    , GlobalConfigDefaultValues::Time);
+            this->write(!isMigrate, GlobalConfigKeys::UseWiFi                 , GlobalConfigDefaultValues::UseWiFi);
+            this->write(!isMigrate, GlobalConfigKeys::ApSsid                  , GlobalConfigDefaultValues::ApSsid);
+            this->write(!isMigrate, GlobalConfigKeys::ApPassWord              , GlobalConfigDefaultValues::ApPassWord);
+            this->write(!isMigrate, GlobalConfigKeys::ApTimeoutMs             , GlobalConfigDefaultValues::ApTimeoutMs);
+            this->write(!isMigrate, GlobalConfigKeys::UseAmbient              , GlobalConfigDefaultValues::UseAmbient);
+            this->write(!isMigrate, GlobalConfigKeys::AmbientIntervalMs       , GlobalConfigDefaultValues::AmbientIntervalMs);
+            this->write(!isMigrate, GlobalConfigKeys::AmbientChannelId        , GlobalConfigDefaultValues::AmbientChannelId);
+            this->write(!isMigrate, GlobalConfigKeys::AmbientWriteKey         , GlobalConfigDefaultValues::AmbientWriteKey);
             this->write(!isMigrate, GlobalConfigKeys::GroveTaskFps            , GlobalConfigDefaultValues::GroveTaskFps);
             this->write(!isMigrate, GlobalConfigKeys::ButtonTaskFps           , GlobalConfigDefaultValues::ButtonTaskFps);
             this->write(!isMigrate, GlobalConfigKeys::UiTaskFps               , GlobalConfigDefaultValues::UiTaskFps);

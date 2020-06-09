@@ -119,21 +119,39 @@ static void setupSd(void) {
 }
 
 static void setupWifi(void) {
-    // setup WiFi
-    const char* ssid = "ssid";
-    const char* pass = "pass";
     // 前回動いていた場合、一旦切断
     lcd.printf("[INFO] reset wifi module.\n");
     wifi.mode(WIFI_STA);
     wifi.disconnect();
     delay(FixedConfig::WaitForPorMs);
+
+    // WiFi使わなければSkip
+    bool useWifi = GlobalConfigDefaultValues::UseWiFi;
+    config.read(GlobalConfigKeys::UseWiFi, useWifi);
+    if (!useWifi) {
+        lcd.printf("[INFO] skip AP Connection.\n");
+        return;
+    }
+
     // Wifi開始
+    const char* ssid   = "ssid"; //TODO: config.getReadPtr<char>(GlobalConfigKeys::ApSsid);
+    const char* pass   = "pass"; //TODO: config.getReadPtr<char>(GlobalConfigKeys::ApPassWord);
+    uint32_t timeoutMs = GlobalConfigDefaultValues::ApTimeoutMs;
+    config.read(GlobalConfigKeys::ApTimeoutMs, timeoutMs);
+
     lcd.printf("[INFO] connect to %s.\n", ssid);
     wifi.begin(ssid, pass);
+
+    const uint32_t startMillis = millis();
     while (wifi.status() != WL_CONNECTED) {
         lcd.print(".");
         delay(FixedConfig::WaitForPorMs);
-        // todo: timeout
+        // timeout
+        const uint32_t elapsedMs = millis() - startMillis;
+        if (elapsedMs > timeoutMs) {
+            lcd.printf("\n[ERROR] timeout.\n");
+            break;
+        }
     }
 
     const bool isConnected = (wifi.status() == WL_CONNECTED);
@@ -142,7 +160,7 @@ static void setupWifi(void) {
         return;
     }
 
-    lcd.printf("[INFO] done.");
+    lcd.printf("\n[INFO] done.");
     lcd.println(wifi.localIP());
 }
 
