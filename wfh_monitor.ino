@@ -27,12 +27,14 @@ static TwoWire& wireL = Wire;  // left  port
 #include <Seeed_Arduino_FreeRTOS.h>
 #include <Seeed_FS.h>
 #include "SD/Seeed_SD.h"
+#include <AtWiFi.h>
 
 static LGFX lcd;               
 static LGFX_Sprite sprite(&lcd);
 static TSL2561_CalculateLux &lightSensor = TSL2561; // TSL2561 Digital Light Sensor
-static Seeed_BME680 bme680(FixedConfig::Bme680SlaveAddr);          // BME680 SlaveAddr=0x76
+static Seeed_BME680 bme680(FixedConfig::Bme680SlaveAddr);
 static SDFS& sd = SD;
+static WiFiClass wifi = WiFi;
 
 /****************************** RTOS Queue ******************************/
 #include "src/IpcQueueDefs.h"
@@ -73,27 +75,25 @@ static ButtonTask<FixedConfig::ButtonTaskDebounceNum> buttonTask(sharedResources
 static UiTask<FixedConfig::UiTaskBrightnessKeyPoint> uiTask(sharedResources, measureDataQueue, buttonStateQueue, lcd, sprite);
 
 /****************************** Setup Subfunction ******************************/
-
-void setup() {
-    // for por
-    delay(FixedConfig::WaitForPorMs);
-
-    // setup display
+static void setupLcd(void) {
     lcd.begin();
     lcd.setTextSize(1);
     lcd.setRotation(1);
     lcd.printf("boot WFH Monitor...\n");
+}
 
-    /* setup implemented HW */
+static void setupPeripheral(void) {
     lcd.printf("[INFO] setup peripheral\n");
     wireL.begin();
     Serial.begin(FixedConfig::SerialBaudrate);
-    // USB UARTが準備できるまで待つ
+    // USB UARTが準備できるまで待つオプションを有効にしてビルドした場合
     while (FixedConfig::WaitForInitSerial && !Serial) {
         lcd.print(".");
         delay(FixedConfig::WaitForPorMs);
     }
+}
 
+static void setupSd(void) {
     // setup sd
     lcd.printf("[INFO] setup SD card\n");
     sd.begin(SDCARD_SS_PIN, SDCARD_SPI);
@@ -116,8 +116,55 @@ void setup() {
             lcd.printf("[ERROR] failed.\n");
         }
     }
+}
 
-    /* setup RTOS */
+static void setupWifi(void) {
+    // 前回動いていた場合、一旦切断
+    lcd.printf("[INFO] reset wifi module.\n");
+    wifi.mode(WIFI_STA);
+    wifi.disconnect();
+    delay(FixedConfig::WaitForPorMs);
+
+    // WiFi使わなければSkip
+    bool useWifi = GlobalConfigDefaultValues::UseWiFi;
+    config.read(GlobalConfigKeys::UseWiFi, useWifi);
+    if (!useWifi) {
+        lcd.printf("[INFO] skip AP Connection.\n");
+        return;
+    }
+
+    // Wifi開始
+    const char* ssid   = "ssid"; //TODO: #49 config.getReadPtr<char>(GlobalConfigKeys::ApSsid);
+    const char* pass   = "pass"; //TODO: #49 config.getReadPtr<char>(GlobalConfigKeys::ApPassWord);
+    uint32_t timeoutMs = GlobalConfigDefaultValues::ApTimeoutMs;
+    config.read(GlobalConfigKeys::ApTimeoutMs, timeoutMs);
+
+    lcd.printf("[INFO] connect to %s.\n", ssid);
+    wifi.begin(ssid, pass);
+
+    const uint32_t startMillis = millis();
+    while (wifi.status() != WL_CONNECTED) {
+        lcd.print(".");
+        delay(FixedConfig::WaitForPorMs);
+        // timeout
+        const uint32_t elapsedMs = millis() - startMillis;
+        if (elapsedMs > timeoutMs) {
+            lcd.printf("\n[ERROR] timeout.\n");
+            break;
+        }
+    }
+
+    const bool isConnected = (wifi.status() == WL_CONNECTED);
+    if (!isConnected) {
+        lcd.printf("[ERROR] Error.\n");
+        return;
+    }
+
+    lcd.printf("\n[INFO] done.");
+    lcd.println(wifi.localIP());
+}
+
+static void setupRtos(void) {
     lcd.printf("[INFO] setup RTOS config\n");
     vSetErrorLed(FixedConfig::ErrorLedPinNum, FixedConfig::ErrorLedState);
 
@@ -125,18 +172,32 @@ void setup() {
     measureDataQueue.createQueue(FixedConfig::DefaultQueueSize);
     buttonStateQueue.createQueue(FixedConfig::DefaultQueueSize);
 
-    lcd.printf("[INFO] setup RTOS task\n");
-    groveTask.createTask(FixedConfig::GroveTaskStackSize, tskIDLE_PRIORITY + 0);
-    buttonTask.createTask(FixedConfig::ButtonTaskStackSize, tskIDLE_PRIORITY + 0);
-    uiTask.createTask(FixedConfig::UiTaskStackSize, tskIDLE_PRIORITY + 1);
-
-    /* keep debug print */
-    lcd.printf("[INFO] done.\n");
+    /* WiFiですでにRTOSが動いているので一旦止める */
+    lcd.printf("[INFO] done. wait=%d[ms]\n", FixedConfig::WaitForDebugPrintMs);
     delay(FixedConfig::WaitForDebugPrintMs);
     lcd.clear();
 
-    /* start task */
-    vTaskStartScheduler();
+    /* Task開始: 以後はTask以外の操作は基本行わない */
+    groveTask.createTask(FixedConfig::GroveTaskStackSize, configMAX_PRIORITIES - 1);
+    buttonTask.createTask(FixedConfig::ButtonTaskStackSize, configMAX_PRIORITIES - 1);
+    uiTask.createTask(FixedConfig::UiTaskStackSize, configMAX_PRIORITIES - 0);
+
+    /* AtWiFiに依存する部分がすでにいくつかのTaskを動かしているので開始操作は不要 */
+}
+
+/****************************** Main ******************************/
+void setup() {
+    // for por
+    delay(FixedConfig::WaitForPorMs);
+
+    /* setup implemented HW */
+    setupLcd();
+    setupPeripheral();
+    setupSd(); 
+    setupWifi();   
+
+    /* setup RTOS and Run */
+    setupRtos();
 }
 
 void loop() {

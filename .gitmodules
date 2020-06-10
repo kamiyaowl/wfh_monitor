@@ -22,3 +22,18 @@
 [submodule "lib/ArduinoJson"]
 	path = lib/ArduinoJson
 	url = https://github.com/bblanchon/ArduinoJson.git
+[submodule "lib/Seeed_Arduino_atWiFi"]
+	path = lib/Seeed_Arduino_atWiFi
+	url = https://github.com/Seeed-Studio/Seeed_Arduino_atWiFi.git
+[submodule "lib/Seeed_Arduino_atUnified"]
+	path = lib/Seeed_Arduino_atUnified
+	url = https://github.com/Seeed-Studio/Seeed_Arduino_atUnified.git
+[submodule "lib/esp-at-lib"]
+	path = lib/esp-at-lib
+	url = https://github.com/Seeed-Studio/esp-at-lib.git
+[submodule "lib/Seeed_Arduino_mbedtls"]
+	path = lib/Seeed_Arduino_mbedtls
+	url = https://github.com/Seeed-Studio/Seeed_Arduino_mbedtls.git
+[submodule "lib/Seeed_Arduino_atWiFiClientSecure"]
+	path = lib/Seeed_Arduino_atWiFiClientSecure
+	url = https://github.com/Seeed-Studio/Seeed_Arduino_atWiFiClientSecure.git
