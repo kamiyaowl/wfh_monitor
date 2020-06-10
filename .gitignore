@@ -136,3 +136,6 @@ wfh_monitor.ino.Seeeduino.samd.seeed_wio_terminal.uf2
 # doxygen
 html
 latex
+
+# build cache
+cache

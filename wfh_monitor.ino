@@ -134,8 +134,8 @@ static void setupWifi(void) {
     }
 
     // Wifi開始
-    const char* ssid   = "ssid"; //TODO: config.getReadPtr<char>(GlobalConfigKeys::ApSsid);
-    const char* pass   = "pass"; //TODO: config.getReadPtr<char>(GlobalConfigKeys::ApPassWord);
+    const char* ssid   = "ssid"; //TODO: #49 config.getReadPtr<char>(GlobalConfigKeys::ApSsid);
+    const char* pass   = "pass"; //TODO: #49 config.getReadPtr<char>(GlobalConfigKeys::ApPassWord);
     uint32_t timeoutMs = GlobalConfigDefaultValues::ApTimeoutMs;
     config.read(GlobalConfigKeys::ApTimeoutMs, timeoutMs);
 
@@ -172,20 +172,17 @@ static void setupRtos(void) {
     measureDataQueue.createQueue(FixedConfig::DefaultQueueSize);
     buttonStateQueue.createQueue(FixedConfig::DefaultQueueSize);
 
-    lcd.printf("[INFO] setup RTOS task\n");
-    groveTask.createTask(FixedConfig::GroveTaskStackSize, tskIDLE_PRIORITY + 0);
-    buttonTask.createTask(FixedConfig::ButtonTaskStackSize, tskIDLE_PRIORITY + 0);
-    uiTask.createTask(FixedConfig::UiTaskStackSize, tskIDLE_PRIORITY + 1);
-}
-
-static void startRtos(void) {
-    /* keep debug print */
-    lcd.printf("[INFO] done.\n");
+    /* WiFiですでにRTOSが動いているので一旦止める */
+    lcd.printf("[INFO] done. wait=%d[ms]\n", FixedConfig::WaitForDebugPrintMs);
     delay(FixedConfig::WaitForDebugPrintMs);
     lcd.clear();
 
-    /* start task */
-    vTaskStartScheduler();
+    /* Task開始: 以後はTask以外の操作は基本行わない */
+    groveTask.createTask(FixedConfig::GroveTaskStackSize, configMAX_PRIORITIES - 1);
+    buttonTask.createTask(FixedConfig::ButtonTaskStackSize, configMAX_PRIORITIES - 1);
+    uiTask.createTask(FixedConfig::UiTaskStackSize, configMAX_PRIORITIES - 0);
+
+    /* AtWiFiに依存する部分がすでにいくつかのTaskを動かしているので開始操作は不要 */
 }
 
 /****************************** Main ******************************/
@@ -201,7 +198,6 @@ void setup() {
 
     /* setup RTOS and Run */
     setupRtos();
-    startRtos();
 }
 
 void loop() {
