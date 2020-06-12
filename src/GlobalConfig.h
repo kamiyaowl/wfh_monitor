@@ -28,6 +28,7 @@ namespace GlobalConfigKeys {
     static constexpr char* GroveTaskFps           = "groveTaskFps";
     static constexpr char* ButtonTaskFps          = "buttonTaskFps";
     static constexpr char* UiTaskFps              = "uiTaskFps";
+    static constexpr char* WifiTaskFps            = "wifiTaskFps";
     static constexpr char* GroveTaskPrintSerial   = "groveTaskPrintSerial";
     static constexpr char* GroveTaskPrintFile     = "groveTaskPrintFile";
     static constexpr char* BrightnessHoldMs       = "brightnessHoldMs";
@@ -52,6 +53,7 @@ namespace GlobalConfigDefaultValues {
     static constexpr uint32_t GroveTaskFps           = 2;
     static constexpr uint32_t ButtonTaskFps          = 60;
     static constexpr uint32_t UiTaskFps              = 30;
+    static constexpr uint32_t WifiTaskFps            = 1;
     static constexpr bool     GroveTaskPrintSerial   = false;
     static constexpr bool     GroveTaskPrintFile     = false;
     static constexpr uint32_t BrightnessHoldMs       = 4000;
