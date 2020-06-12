@@ -41,6 +41,7 @@ class WifiTask : public FpsControlTask {
         bool isUseWifi;
         bool isUseAmbient;
         // ローカル変数
+        WiFiClient client;
         Ambient ambient;
 
 

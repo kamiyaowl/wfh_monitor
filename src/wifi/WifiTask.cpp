@@ -17,7 +17,7 @@ void WifiTask::setup(void) {
             config.read(GlobalConfigKeys::AmbientChannelId, channelId);
             auto writeKey = config.getReadPtr<char>(GlobalConfigKeys::AmbientWriteKey);
 
-            this->ambient.begin(channelId, writeKey, &this->wifi);
+            this->ambient.begin(channelId, writeKey, &this->client);
         }
     });
 }
@@ -41,6 +41,7 @@ bool WifiTask::invokeGetWifiStatus(const WifiTaskRequest& req, WifiTaskResponse&
         resp.data.wifiStatus.ipAddr[3] = 0;
         return false;
     }
+    
     // set status
     resp.data.wifiStatus.status = wifi.status();
     // set ip addr
