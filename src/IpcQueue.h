@@ -24,6 +24,16 @@ class IpcQueue {
         virtual ~IpcQueue(void) {}
 
         /**
+         * @brief Copy Constructorは禁止
+         */
+        IpcQueue(const IpcQueue<T>&) = delete;
+
+        /**
+         * @brief Copy Constructorは禁止
+         */
+        IpcQueue<T>& operator=(const IpcQueue<T>&) = delete;
+
+        /**
          * @brief Create a RTOS Queue
          * @note この関数はQueue class内部変数が変更されるため、割り込み/中断が発生しない状況で使用する必要があります
          * 
