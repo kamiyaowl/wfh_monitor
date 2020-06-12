@@ -11,7 +11,20 @@ TODO: 写真
 
 ## 機能
 
-TODO:
+* Grove接続されたI2C I/Fを持つセンサ値を読み取る
+* LCDに現在の値を表示する
+* microSDカードからの設定の読み書き
+* microSDカードへのセンサ値保存
+* [Ambient](https://ambidata.io/) へのセンサ値送信
+* Taskことに分離された実装による拡張性
+  * C/C++の実装経験があれば、自分の好みの機能を追加したり修正したりすることができます
+    * LCDの表示: [UiTask.h](https://github.com/kamiyaowl/wfh_monitor/blob/master/src/ui/UiTask.h)
+    * Groveセンサの管理: [GroveTask.h](https://github.com/kamiyaowl/wfh_monitor/blob/master/src/grove/GroveTask.h)
+    * WiFiを利用したデータ送受信: [WiFiTask.h](https://github.com/kamiyaowl/wfh_monitor/blob/master/src/wifi/WifiTask.h)
+    * SDカードからの設定管理: [GlobalConfig.h](https://github.com/kamiyaowl/wfh_monitor/blob/master/src/GlobalConfig.h)
+    * コンパイル時設定管理: [FixedConfig.h](https://github.com/kamiyaowl/wfh_monitor/blob/master/src/FixedConfig.h)
+* Docker環境でのビルド環境
+  * ライブラリの依存等環境構築に悩む必要はもうありません
 
 ## 必要なもの
 
@@ -60,6 +73,7 @@ SDカードでは設定できず、コンパイル時定数として埋め込ま
 
 素晴らしいライブラリをありがとうございます。
 
+* [AmbientDataInc/Ambient_ESP8266_lib](https://github.com/AmbientDataInc/Ambient_ESP8266_lib)
 * [bblanchon/ArduinoJson](https://github.com/bblanchon/ArduinoJson)
 * [lovyan03/LovyanGFX](https://github.com/lovyan03/LovyanGFX)
 * [Seeed-Studio/Grove_Digital_Light_Sensor](https://github.com/Seeed-Studio/Grove_Digital_Light_Sensor)
