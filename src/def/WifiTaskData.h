@@ -11,6 +11,7 @@
 struct WifiStatusData {
     uint8_t ipAddr[4]; /**< ip address, isConnected=falseならdon't care */
     wl_status_t status; /**< 接続ステータス */
+    uint32_t timestamp; /**< 更新時のTickTimerの値 */
 };
 
 /**

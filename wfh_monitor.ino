@@ -14,6 +14,10 @@
 #include "src/FixedConfig.h"
 
 /****************************** Peripheral ******************************/
+// LCDにMessageを出力してその場で無限ループして停止します
+#define PANIC(...) ({ Serial.printf(__VA_ARGS__); while(true){} })
+
+/****************************** Peripheral ******************************/
 #include <SPI.h>
 #include <Wire.h>
 
@@ -171,9 +175,20 @@ static void setupRtos(void) {
     lcd.printf("[INFO] setup RTOS config\n");
     vSetErrorLed(FixedConfig::ErrorLedPinNum, FixedConfig::ErrorLedState);
 
+    /* Queue 作成失敗は後の挙動に影響が出るので即時停止する */
     lcd.printf("[INFO] setup RTOS queue\n");
-    measureDataQueue.createQueue(FixedConfig::DefaultQueueSize);
-    buttonStateQueue.createQueue(FixedConfig::DefaultQueueSize);
+    if (!measureDataQueue.createQueue(FixedConfig::DefaultQueueSize)) {
+        PANIC("[PANIC] measureDataQueue create failed.");
+    }
+    if (!buttonStateQueue.createQueue(FixedConfig::DefaultQueueSize)) {
+        PANIC("[PANIC] buttonStateQueue create failed.");
+    }
+    if (!wifiRequestQueue.createQueue(FixedConfig::DefaultQueueSize)) {
+        PANIC("[PANIC] wifiRequestQueue create failed.");
+    }
+    if (!wifiResponseQueue.createQueue(FixedConfig::DefaultQueueSize)) {
+        PANIC("[PANIC] wifiResponseQueue create failed.");
+    }
 
     /* WiFiですでにRTOSが動いているので一旦止める */
     lcd.printf("[INFO] done. wait=%d[ms]\n", FixedConfig::WaitForDebugPrintMs);

@@ -21,8 +21,8 @@ class WifiTask : public FpsControlTask {
         WifiTask(
             const SharedResourceDefs& resource,
             WiFiClass& wifi,
-            IpcQueue<WifiTaskRequest> recvQueue,
-            IpcQueue<WifiTaskResponse> sendQueue
+            IpcQueue<WifiTaskRequest>& recvQueue,
+            IpcQueue<WifiTaskResponse>& sendQueue
             ) : resource(resource), wifi(wifi), recvQueue(recvQueue), sendQueue(sendQueue) {}
         /**
          * @brief Destroy the Wifi Task object
@@ -32,8 +32,8 @@ class WifiTask : public FpsControlTask {
     protected:
         const SharedResourceDefs& resource; /**< 共有リソース */
         WiFiClass& wifi; /**< Wifiを取り扱うのはこのクラスに一任するのでSharedResouceにはしない */
-        IpcQueue<WifiTaskRequest> recvQueue; /**< WifiTaskへの要求が積まれるQueue */
-        IpcQueue<WifiTaskResponse> sendQueue; /**< WifiTaskからの応答が積まれるQueue */
+        IpcQueue<WifiTaskRequest>& recvQueue; /**< WifiTaskへの要求が積まれるQueue */
+        IpcQueue<WifiTaskResponse>& sendQueue; /**< WifiTaskからの応答が積まれるQueue */
 
         void setup(void) override;
         bool loop(void) override;

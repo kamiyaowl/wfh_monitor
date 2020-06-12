@@ -1,3 +1,4 @@
+#include "../SysTimer.h"
 #include "WifiTask.h"
 
 void WifiTask::setup(void) {
@@ -23,6 +24,8 @@ bool WifiTask::invokeGetWifiStatus(const WifiTaskRequest& req, WifiTaskResponse&
     resp.data.wifiStatus.ipAddr[1] = ip[1];
     resp.data.wifiStatus.ipAddr[2] = ip[2];
     resp.data.wifiStatus.ipAddr[3] = ip[3];
+    // set timestamp
+    resp.data.wifiStatus.timestamp = SysTimer::getTickCount();
     // always success
     return true;
 }
@@ -39,11 +42,9 @@ bool WifiTask::loop(void) {
     if (this->sendQueue.emptyNum() == 0) {
         return false; // no abort
     }
-    // 受信できるまでは永久に待機
-    const bool isSuccess = this->recvQueue.receive(&req, true); 
-    if (!isSuccess) { 
-        return false; // no abort
-    }
+
+    // 要求を受信(受信できるまでTask Suspendさせる)
+    this->recvQueue.receive(&req, true); 
     // いい感じに処理
     resp.id = req.id;
     switch (req.id) {

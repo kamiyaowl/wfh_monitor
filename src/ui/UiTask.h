@@ -62,6 +62,7 @@ class UiTask : public FpsControlTask {
 
         MeasureData latestMeasureData;
         ButtonEventData latestButtonState;
+        WifiStatusData latestWifiStatus;
 
         uint32_t counter; /**< for debug*/
         LGFX& lcd;
@@ -104,6 +105,12 @@ class UiTask : public FpsControlTask {
             this->latestButtonState.debounce = 0x0;
             this->latestButtonState.push = 0x0;
             this->latestButtonState.release = 0x0;
+            this->latestWifiStatus.ipAddr[0] = 0x0;
+            this->latestWifiStatus.ipAddr[1] = 0x0;
+            this->latestWifiStatus.ipAddr[2] = 0x0;
+            this->latestWifiStatus.ipAddr[3] = 0x0;
+            this->latestWifiStatus.status = WL_DISCONNECTED;
+            this->latestWifiStatus.timestamp = 0x0;
         }
         bool loop(void) override {
             // receive queue datas
@@ -112,6 +119,25 @@ class UiTask : public FpsControlTask {
             }
             if (this->recvButtonStateQueue.remainNum() > 0) {
                 this->recvButtonStateQueue.receive(&this->latestButtonState, false);
+            }
+            if (this->recvWifiRespQueue.remainNum() > 0) {
+                WifiTaskResponse resp;
+                this->recvWifiRespQueue.receive(&resp, false);
+                if (resp.isSuccess) {
+                    switch (resp.id) {
+                        case WifiTaskRequestId::Nop:
+                            break;
+                        case WifiTaskRequestId::GetWifiStatus:
+                            this->latestWifiStatus = resp.data.wifiStatus;
+                            break;
+                        case WifiTaskRequestId::SendSensorData:
+                            // TODO: send sensordataのステータスを更新
+                            break;
+                        default:
+                            // ありえん
+                            break;
+                    }
+                }
             }
 
             // backlight
@@ -139,9 +165,21 @@ class UiTask : public FpsControlTask {
             this->lcd.printf("debounce  = %08x\n", this->latestButtonState.debounce);
             this->lcd.printf("push      = %08x\n", this->latestButtonState.push);
             this->lcd.printf("release   = %08x\n", this->latestButtonState.release);
-            this->lcd.printf("timestamp = %u\n", this->latestButtonState.timestamp);
+            this->lcd.printf("timestamp = %u\n"  , this->latestButtonState.timestamp);
             this->lcd.printf("\n");
-            
+
+            this->lcd.printf("#Wifi\n");
+            this->lcd.printf("status    = %d\n"         , this->latestWifiStatus.status);
+            this->lcd.printf("ipAddr    = %d.%d.%d.%d\n", this->latestWifiStatus.ipAddr[0], this->latestWifiStatus.ipAddr[1], this->latestWifiStatus.ipAddr[2], this->latestWifiStatus.ipAddr[3]);
+            this->lcd.printf("timestamp = %u\n"         , this->latestWifiStatus.timestamp);
+
+            // TODO: #54 常にStatus監視しないようにする(定期実行としたい)
+            if (this->sendWifiReqQueue.remainNum() == 0) {
+                WifiTaskRequest req;
+                req.id = WifiTaskRequestId::GetWifiStatus;
+                this->sendWifiReqQueue.send(&req);
+            }
+
             // for debug
             this->counter++;
 
