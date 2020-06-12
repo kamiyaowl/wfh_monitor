@@ -19,6 +19,7 @@ namespace FixedConfig {
     static constexpr size_t   GroveTaskStackSize       = 2048;          /**< GroveTaskのStackSize */
     static constexpr size_t   ButtonTaskStackSize      = 256;           /**< ButtonTaskのStackSize */
     static constexpr size_t   UiTaskStackSize          = 2048;          /**< UiTaskのStackSize */
+    static constexpr size_t   wifiTaskStackSize        = 2048;          /**< UiTaskのStackSize */
     static constexpr uint32_t WaitForDebugPrintMs      = 4096;          /**< Task開始直前の待機時間 */
     static constexpr char*    GroveTaskPrintFilePath   = "sensor.csv";  /**< GroveTaskでファイル記録を有効化した場合の保存先 */
     static constexpr size_t   ButtonTaskDebounceNum    = 2;             /**< ButtonTaskで保持する履歴数 */

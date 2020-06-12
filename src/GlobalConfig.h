@@ -158,6 +158,7 @@ class GlobalConfig {
             this->write(!isMigrate, GlobalConfigKeys::GroveTaskFps            , GlobalConfigDefaultValues::GroveTaskFps);
             this->write(!isMigrate, GlobalConfigKeys::ButtonTaskFps           , GlobalConfigDefaultValues::ButtonTaskFps);
             this->write(!isMigrate, GlobalConfigKeys::UiTaskFps               , GlobalConfigDefaultValues::UiTaskFps);
+            this->write(!isMigrate, GlobalConfigKeys::WifiTaskFps             , GlobalConfigDefaultValues::WifiTaskFps);
             this->write(!isMigrate, GlobalConfigKeys::GroveTaskPrintSerial    , GlobalConfigDefaultValues::GroveTaskPrintSerial);
             this->write(!isMigrate, GlobalConfigKeys::GroveTaskPrintFile      , GlobalConfigDefaultValues::GroveTaskPrintFile);
             this->write(!isMigrate, GlobalConfigKeys::BrightnessHoldMs        , GlobalConfigDefaultValues::BrightnessHoldMs);

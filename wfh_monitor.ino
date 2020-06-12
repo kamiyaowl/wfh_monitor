@@ -44,6 +44,8 @@ static WiFiClass wifi = WiFi;
 // NonCacheアクセスを矯正できる場所(TCM), 参照時はNonCacheアクセスする, 書き込み後FlushDCache/読み出し前InvalidateDCacheを徹底する
 static IpcQueue<MeasureData> measureDataQueue;
 static IpcQueue<ButtonEventData> buttonStateQueue;
+static IpcQueue<WifiTaskRequest> wifiRequestQueue;
+static IpcQueue<WifiTaskResponse> wifiResponseQueue;
 
 /****************************** RTOS SharedData ******************************/
 #include <ArduinoJson.h>
@@ -69,11 +71,12 @@ static SharedResourceDefs sharedResources = {
 #include "src/GroveTask.h"
 #include "src/ButtonTask.h"
 #include "src/UiTask.h"
+#include "src/WifiTask.h"
 
 static GroveTask groveTask(sharedResources, measureDataQueue, lightSensor, bme680);
 static ButtonTask<FixedConfig::ButtonTaskDebounceNum> buttonTask(sharedResources, buttonStateQueue);
-static UiTask<FixedConfig::UiTaskBrightnessKeyPoint> uiTask(sharedResources, measureDataQueue, buttonStateQueue, lcd, sprite);
-
+static UiTask<FixedConfig::UiTaskBrightnessKeyPoint> uiTask(sharedResources, measureDataQueue, buttonStateQueue, wifiRequestQueue, wifiResponseQueue, lcd, sprite);
+static WifiTask wifiTask(sharedResources, wifi, wifiRequestQueue, wifiResponseQueue);
 /****************************** Setup Subfunction ******************************/
 static void setupLcd(void) {
     lcd.begin();
@@ -181,6 +184,7 @@ static void setupRtos(void) {
     groveTask.createTask(FixedConfig::GroveTaskStackSize, configMAX_PRIORITIES - 1);
     buttonTask.createTask(FixedConfig::ButtonTaskStackSize, configMAX_PRIORITIES - 1);
     uiTask.createTask(FixedConfig::UiTaskStackSize, configMAX_PRIORITIES - 0);
+    wifiTask.createTask(FixedConfig::wifiTaskStackSize, configMAX_PRIORITIES - 1);
 
     /* AtWiFiに依存する部分がすでにいくつかのTaskを動かしているので開始操作は不要 */
 }

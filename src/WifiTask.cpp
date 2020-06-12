@@ -5,6 +5,7 @@ void WifiTask::setup(void) {
         auto fps = GlobalConfigDefaultValues::WifiTaskFps;
         config.read(GlobalConfigKeys::WifiTaskFps, fps);
         this->setFps(fps);
+        // TODO: ambient送信に必要な情報も読み込んでおく
     });
 }
 
@@ -36,12 +37,12 @@ bool WifiTask::loop(void) {
     WifiTaskResponse resp;
     // 応答Queueに空きができるまでは処理しても仕方ないので待つ
     if (this->sendQueue.emptyNum() == 0) {
-        return;
+        return false; // no abort
     }
     // 受信できるまでは永久に待機
     const bool isSuccess = this->recvQueue.receive(&req, true); 
     if (!isSuccess) { 
-        return;
+        return false; // no abort
     }
     // いい感じに処理
     resp.id = req.id;
