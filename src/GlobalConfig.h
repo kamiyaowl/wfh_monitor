@@ -130,7 +130,7 @@ class GlobalConfig {
                 return nullptr;
             }
             
-            return &this->configVolatile[key];
+            return this->configVolatile[key];
         }
 
         /**

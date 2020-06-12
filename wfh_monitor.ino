@@ -134,8 +134,8 @@ static void setupWifi(void) {
     }
 
     // Wifi開始
-    const char* ssid   = "ssid"; //TODO: #49 config.getReadPtr<char>(GlobalConfigKeys::ApSsid);
-    const char* pass   = "pass"; //TODO: #49 config.getReadPtr<char>(GlobalConfigKeys::ApPassWord);
+    const char* ssid   = config.getReadPtr<char>(GlobalConfigKeys::ApSsid);
+    const char* pass   = config.getReadPtr<char>(GlobalConfigKeys::ApPassWord);
     uint32_t timeoutMs = GlobalConfigDefaultValues::ApTimeoutMs;
     config.read(GlobalConfigKeys::ApTimeoutMs, timeoutMs);
 
