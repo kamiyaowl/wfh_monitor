@@ -6,7 +6,19 @@ void WifiTask::setup(void) {
         auto fps = GlobalConfigDefaultValues::WifiTaskFps;
         config.read(GlobalConfigKeys::WifiTaskFps, fps);
         this->setFps(fps);
-        // TODO: ambient送信に必要な情報も読み込んでおく
+        // Wifi/Ambient使用有無
+        this->isUseWifi = GlobalConfigDefaultValues::UseWiFi;
+        this->isUseAmbient = GlobalConfigDefaultValues::UseAmbient;
+        config.read(GlobalConfigKeys::UseWiFi, this->isUseWifi);
+        config.read(GlobalConfigKeys::UseAmbient, this->isUseAmbient);
+        // ambient送信に必要な情報も読み込んでおく
+        if (this->isUseWifi && this->isUseAmbient) {
+            auto channelId = GlobalConfigDefaultValues::AmbientChannelId;
+            config.read(GlobalConfigKeys::AmbientChannelId, channelId);
+            auto writeKey = config.getReadPtr<char>(GlobalConfigKeys::AmbientWriteKey);
+
+            this->ambient.begin(channelId, writeKey, &this->wifi);
+        }
     });
 }
 
@@ -16,6 +28,19 @@ bool WifiTask::invokeNop(const WifiTaskRequest& req, WifiTaskResponse& resp) {
 }
 
 bool WifiTask::invokeGetWifiStatus(const WifiTaskRequest& req, WifiTaskResponse& resp) {
+    // set timestamp
+    resp.data.wifiStatus.timestamp = SysTimer::getTickCount();
+
+    // WiFiを使っていない場合
+    if (!this->isUseWifi) {
+        // set status & invalid ip
+        resp.data.wifiStatus.status = WL_DISCONNECTED;
+        resp.data.wifiStatus.ipAddr[0] = 0;
+        resp.data.wifiStatus.ipAddr[1] = 0;
+        resp.data.wifiStatus.ipAddr[2] = 0;
+        resp.data.wifiStatus.ipAddr[3] = 0;
+        return false;
+    }
     // set status
     resp.data.wifiStatus.status = wifi.status();
     // set ip addr
@@ -24,15 +49,31 @@ bool WifiTask::invokeGetWifiStatus(const WifiTaskRequest& req, WifiTaskResponse&
     resp.data.wifiStatus.ipAddr[1] = ip[1];
     resp.data.wifiStatus.ipAddr[2] = ip[2];
     resp.data.wifiStatus.ipAddr[3] = ip[3];
-    // set timestamp
-    resp.data.wifiStatus.timestamp = SysTimer::getTickCount();
-    // always success
     return true;
 }
 
 bool WifiTask::invokeSend(const WifiTaskRequest& req, WifiTaskResponse& resp) {
-    // TODO: #27 Ambient送信を行う
-    return false;
+    //TODO: 詳細なエラーステータスを残す
+
+    // Wifi及びAmbient無効の場合は何もしない
+    if (!this->isUseWifi || !this->isUseAmbient) {
+        return false;
+    }
+    // Wifiが接続ステータスになっていなければ失敗
+    if (this->wifi.status() != WL_CONNECTED) {
+        return false;
+    }
+
+    // データを準備(1~8)
+    ambient.set(1, String(req.data.measureData.visibleLux).c_str());
+    ambient.set(2, String(req.data.measureData.tempature).c_str());
+    ambient.set(3, String(req.data.measureData.humidity).c_str());
+    ambient.set(4, String(req.data.measureData.pressure).c_str());
+    ambient.set(5, String(req.data.measureData.gas).c_str());
+    // 送信
+    const bool result = ambient.send(); // clear()も内部的にされている
+
+    return result;
 }
 
 bool WifiTask::loop(void) {

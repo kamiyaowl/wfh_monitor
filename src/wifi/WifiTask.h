@@ -2,6 +2,7 @@
 #define WIFITASK_H
 
 #include <AtWiFi.h>
+#include "Ambient.h"
 
 #include "../SharedResourceDefs.h"
 #include "../IpcQueueDefs.h"
@@ -36,7 +37,12 @@ class WifiTask : public FpsControlTask {
         IpcQueue<WifiTaskResponse>& sendQueue; /**< WifiTaskからの応答が積まれるQueue */
         // peripheral
         WiFiClass& wifi; /**< Wifiを取り扱うのはこのクラスに一任するのでSharedResouceにはしない */
+        // configから読み出し
+        bool isUseWifi;
+        bool isUseAmbient;
         // ローカル変数
+        Ambient ambient;
+
 
         void setup(void) override;
         bool loop(void) override;
