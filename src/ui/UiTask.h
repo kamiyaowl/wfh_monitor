@@ -38,8 +38,7 @@ class UiTask : public FpsControlTask {
             IpcQueue<WifiTaskResponse>& recvWifiRespQueue,
             LGFX& lcd,
             LGFX_Sprite& sprite
-        ): resource(resource), 
-           counter(0),
+        ): resource(resource),           
            recvMeasureDataQueue(recvMeasureDataQueue),
            recvButtonStateQueue(recvButtonStateQueue),
            sendWifiReqQueue(sendWifiReqQueue),
@@ -59,17 +58,26 @@ class UiTask : public FpsControlTask {
         IpcQueue<ButtonEventData>& recvButtonStateQueue; /**< ボタン入力受信用 */
         IpcQueue<WifiTaskRequest>& sendWifiReqQueue; /**< Wifi要求 */
         IpcQueue<WifiTaskResponse>& recvWifiRespQueue; /**< Wifi応答  */
-
-        MeasureData latestMeasureData;
-        ButtonEventData latestButtonState;
-        WifiStatusData latestWifiStatus;
-
-        uint32_t counter; /**< for debug*/
+        // hw
         LGFX& lcd;
         LGFX_Sprite& sprite;
+        // hw resourceを使って初期化が必要
         BrightnessControl<N, LGFX> brightness;
+        // configから読み出し
+        uint32_t ambientIntervalMs; /**< ambientへのデータ送信周期 */
+        bool isUseAmbient; /**< ambientへのデータ送信を利用する場合はtrue */
+        // ローカル変数
+        bool isSendingAmbient; /**< ambientへデータ送信中の場合はtrue, QD=1制御用フラグ */
+        bool wasSucceedSendAmbient; /**< 最後にAmbientにデータ送信した結果 */
+        uint32_t counter; /**< for debug*/
+        MeasureData latestMeasureData; /**< 最後に受信した測定データ */
+        ButtonEventData latestButtonState; /**< 最後に受信したボタン入力 */
+        WifiStatusData latestWifiStatus; /**< 最後に受信したWiFi Status */
 
         void setup(void) override {
+            // initialize lcd
+            this->lcd.setTextSize(1);
+
             // configure
             static constexpr BrightnessSetting brightnessSetting[N] = { // TODO: 設定ファイルから色々できるといいなぁ...
                 { .visibleLux =  50.0f , .brightness = 20 },
@@ -77,6 +85,7 @@ class UiTask : public FpsControlTask {
                 { .visibleLux = 180.0f , .brightness = 200 },
                 { .visibleLux = FLT_MAX, .brightness = 255 },
             };
+
             this->resource.config.operate([&](GlobalConfig<FixedConfig::ConfigAllocateSize>& config){
                 // fps
                 auto fps = GlobalConfigDefaultValues::UiTaskFps;
@@ -87,14 +96,18 @@ class UiTask : public FpsControlTask {
                 auto transitionMs = GlobalConfigDefaultValues::BrightnessTransitionMs;
                 config.read(GlobalConfigKeys::BrightnessHoldMs, holdMs);
                 config.read(GlobalConfigKeys::BrightnessTransitionMs, transitionMs);
-
                 this->brightness.configure(true, holdMs, transitionMs, brightnessSetting);
+                // ambient
+                this->isUseAmbient = GlobalConfigDefaultValues::UseAmbient;
+                this->ambientIntervalMs = GlobalConfigDefaultValues::AmbientIntervalMs;
+                config.read(GlobalConfigKeys::UseAmbient, this->isUseAmbient);
+                config.read(GlobalConfigKeys::AmbientIntervalMs, this->ambientIntervalMs);
             });
 
-            // initialize lcd
-            this->lcd.setTextSize(1);
-
             // initial value
+            this->isSendingAmbient = false;
+            this->wasSucceedSendAmbient = false;
+            this->counter = 0x0;
             this->latestMeasureData.visibleLux = 0.0f;
             this->latestMeasureData.tempature = 0.0f;
             this->latestMeasureData.pressure = 0.0f;
@@ -123,20 +136,19 @@ class UiTask : public FpsControlTask {
             if (this->recvWifiRespQueue.remainNum() > 0) {
                 WifiTaskResponse resp;
                 this->recvWifiRespQueue.receive(&resp, false);
-                if (resp.isSuccess) {
-                    switch (resp.id) {
-                        case WifiTaskRequestId::Nop:
-                            break;
-                        case WifiTaskRequestId::GetWifiStatus:
-                            this->latestWifiStatus = resp.data.wifiStatus;
-                            break;
-                        case WifiTaskRequestId::SendSensorData:
-                            // TODO: send sensordataのステータスを更新
-                            break;
-                        default:
-                            // ありえん
-                            break;
-                    }
+                switch (resp.id) {
+                    case WifiTaskRequestId::Nop:
+                        break;
+                    case WifiTaskRequestId::GetWifiStatus:
+                        this->latestWifiStatus = resp.data.wifiStatus;
+                        break;
+                    case WifiTaskRequestId::SendSensorData:
+                        this->isSendingAmbient = false;
+                        this->wasSucceedSendAmbient = resp.isSuccess;
+                        break;
+                    default:
+                        // ありえん
+                        break;
                 }
             }
 
@@ -172,12 +184,27 @@ class UiTask : public FpsControlTask {
             this->lcd.printf("status    = %d\n"         , this->latestWifiStatus.status);
             this->lcd.printf("ipAddr    = %d.%d.%d.%d\n", this->latestWifiStatus.ipAddr[0], this->latestWifiStatus.ipAddr[1], this->latestWifiStatus.ipAddr[2], this->latestWifiStatus.ipAddr[3]);
             this->lcd.printf("timestamp = %u\n"         , this->latestWifiStatus.timestamp);
+            this->lcd.printf("\n");
+
+            this->lcd.printf("#Ambient\n");
+            this->lcd.printf("use     = %d\n"         , this->isUseAmbient);
+            this->lcd.printf("sending = %d\n"         , this->isSendingAmbient);
+            this->lcd.printf("result  = %d\n"         , this->wasSucceedSendAmbient);
+            this->lcd.printf("\n");
 
             // TODO: #54 常にStatus監視しないようにする(定期実行としたい)
             if (this->sendWifiReqQueue.remainNum() == 0) {
                 WifiTaskRequest req;
                 req.id = WifiTaskRequestId::GetWifiStatus;
                 this->sendWifiReqQueue.send(&req);
+                // TODO: Test Codeなので削除, 置き換えるときはQueue Fullに注意
+                if (this->isUseAmbient && !this->isSendingAmbient) {
+                    this->isSendingAmbient = true; // QD=1制限用
+
+                    req.id = WifiTaskRequestId::SendSensorData;
+                    req.data.measureData = this->latestMeasureData;
+                    this->sendWifiReqQueue.send(&req);
+                }
             }
 
             // for debug

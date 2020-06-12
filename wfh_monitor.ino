@@ -80,7 +80,7 @@ static SharedResourceDefs sharedResources = {
 static GroveTask groveTask(sharedResources, measureDataQueue, lightSensor, bme680);
 static ButtonTask<FixedConfig::ButtonTaskDebounceNum> buttonTask(sharedResources, buttonStateQueue);
 static UiTask<FixedConfig::UiTaskBrightnessKeyPoint> uiTask(sharedResources, measureDataQueue, buttonStateQueue, wifiRequestQueue, wifiResponseQueue, lcd, sprite);
-static WifiTask wifiTask(sharedResources, wifi, wifiRequestQueue, wifiResponseQueue);
+static WifiTask wifiTask(sharedResources, wifiRequestQueue, wifiResponseQueue, wifi);
 /****************************** Setup Subfunction ******************************/
 static void setupLcd(void) {
     lcd.begin();
