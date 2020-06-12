@@ -23,8 +23,8 @@ TODO: 写真
     * WiFiを利用したデータ送受信: [WiFiTask.h](https://github.com/kamiyaowl/wfh_monitor/blob/master/src/wifi/WifiTask.h)
     * SDカードからの設定管理: [GlobalConfig.h](https://github.com/kamiyaowl/wfh_monitor/blob/master/src/GlobalConfig.h)
     * コンパイル時設定管理: [FixedConfig.h](https://github.com/kamiyaowl/wfh_monitor/blob/master/src/FixedConfig.h)
-* Docker環境でのビルド環境
-  * ライブラリの依存等環境構築に悩む必要はもうありません
+* Dockerを使ったビルド環境
+  * ビルド環境構築に悩む必要はもうありません
 
 ## 必要なもの
 
