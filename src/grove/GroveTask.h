@@ -4,11 +4,10 @@
 #include <Digital_Light_TSL2561.h>
 #include <seeed_bme680.h>
 
-#include "SharedResourceDefs.h"
-#include "IpcQueueDefs.h"
-#include "IpcQueue.h"
-
-#include "FpsControlTask.h"
+#include "../SharedResourceDefs.h"
+#include "../IpcQueueDefs.h"
+#include "../IpcQueue.h"
+#include "../FpsControlTask.h"
 
 /**
  * @brief Grove端子に接続されたIICセンサの値を収集するTaskです

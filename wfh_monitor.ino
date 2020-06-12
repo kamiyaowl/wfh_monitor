@@ -68,10 +68,10 @@ static SharedResourceDefs sharedResources = {
 
 /****************************** RTOS Task ******************************/
 #include "src/TaskBase.h"
-#include "src/GroveTask.h"
-#include "src/ButtonTask.h"
-#include "src/UiTask.h"
-#include "src/WifiTask.h"
+#include "src/grove/GroveTask.h"
+#include "src/button/ButtonTask.h"
+#include "src/ui/UiTask.h"
+#include "src/wifi/WifiTask.h"
 
 static GroveTask groveTask(sharedResources, measureDataQueue, lightSensor, bme680);
 static ButtonTask<FixedConfig::ButtonTaskDebounceNum> buttonTask(sharedResources, buttonStateQueue);

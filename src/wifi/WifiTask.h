@@ -3,11 +3,10 @@
 
 #include <AtWiFi.h>
 
-#include "SharedResourceDefs.h"
-#include "IpcQueueDefs.h"
-#include "IpcQueue.h"
-
-#include "FpsControlTask.h"
+#include "../SharedResourceDefs.h"
+#include "../IpcQueueDefs.h"
+#include "../IpcQueue.h"
+#include "../FpsControlTask.h"
 
 class WifiTask : public FpsControlTask {
     public:

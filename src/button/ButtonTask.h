@@ -1,12 +1,11 @@
 #ifndef BUTTONTASK_H
 #define BUTTONTASK_H
 
-#include "SharedResourceDefs.h"
-#include "IpcQueueDefs.h"
-#include "IpcQueue.h"
-#include "SysTimer.h"
-
-#include "FpsControlTask.h"
+#include "../SharedResourceDefs.h"
+#include "../IpcQueueDefs.h"
+#include "../IpcQueue.h"
+#include "../SysTimer.h"
+#include "../FpsControlTask.h"
 
 /**
  * @brief Wio Terminalについている上部ボタンと4方向ボタンの値を取得するタスクです

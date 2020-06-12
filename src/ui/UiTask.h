@@ -4,15 +4,13 @@
 #include <cfloat>
 #include <LovyanGFX.hpp>
 
-#include "SysTimer.h"
+#include "../SharedResourceDefs.h"
+#include "../IpcQueueDefs.h"
+#include "../IpcQueue.h"
+#include "../SysTimer.h"
+#include "../FpsControlTask.h"
 
-#include "SharedResourceDefs.h"
-#include "IpcQueueDefs.h"
-#include "IpcQueue.h"
-
-#include "ui/BrightnessControl.h"
-
-#include "FpsControlTask.h"
+#include "control/BrightnessControl.h"
 
 /**
  * @brief UserInterfaceの表示を行うタスクです

@@ -10,7 +10,7 @@
 
 #include <cstdint>
 
-#include "../SysTimer.h" //TODO: できれば相対インクルードやめたい
+#include "../../SysTimer.h"
 
 /**
  * @brief BrightnessControlの遷移状態を示します
