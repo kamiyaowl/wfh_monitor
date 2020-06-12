@@ -37,3 +37,6 @@
 [submodule "lib/Seeed_Arduino_atWiFiClientSecure"]
 	path = lib/Seeed_Arduino_atWiFiClientSecure
 	url = https://github.com/Seeed-Studio/Seeed_Arduino_atWiFiClientSecure.git
+[submodule "lib/Ambient_ESP8266_lib"]
+	path = lib/Ambient_ESP8266_lib
+	url = https://github.com/AmbientDataInc/Ambient_ESP8266_lib.git

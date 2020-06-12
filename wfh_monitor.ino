@@ -80,7 +80,7 @@ static SharedResourceDefs sharedResources = {
 static GroveTask groveTask(sharedResources, measureDataQueue, lightSensor, bme680);
 static ButtonTask<FixedConfig::ButtonTaskDebounceNum> buttonTask(sharedResources, buttonStateQueue);
 static UiTask<FixedConfig::UiTaskBrightnessKeyPoint> uiTask(sharedResources, measureDataQueue, buttonStateQueue, wifiRequestQueue, wifiResponseQueue, lcd, sprite);
-static WifiTask wifiTask(sharedResources, wifi, wifiRequestQueue, wifiResponseQueue);
+static WifiTask wifiTask(sharedResources, wifiRequestQueue, wifiResponseQueue, wifi);
 /****************************** Setup Subfunction ******************************/
 static void setupLcd(void) {
     lcd.begin();
@@ -141,8 +141,8 @@ static void setupWifi(void) {
     }
 
     // Wifi開始
-    const char* ssid   = config.getReadPtr<char>(GlobalConfigKeys::ApSsid);
-    const char* pass   = config.getReadPtr<char>(GlobalConfigKeys::ApPassWord);
+    auto ssid = config.getReadPtr<char>(GlobalConfigKeys::ApSsid);
+    auto pass = config.getReadPtr<char>(GlobalConfigKeys::ApPassWord);
     uint32_t timeoutMs = GlobalConfigDefaultValues::ApTimeoutMs;
     config.read(GlobalConfigKeys::ApTimeoutMs, timeoutMs);
 
@@ -195,11 +195,15 @@ static void setupRtos(void) {
     delay(FixedConfig::WaitForDebugPrintMs);
     lcd.clear();
 
-    /* Task開始: 以後はTask以外の操作は基本行わない */
-    groveTask.createTask(FixedConfig::GroveTaskStackSize, configMAX_PRIORITIES - 1);
-    buttonTask.createTask(FixedConfig::ButtonTaskStackSize, configMAX_PRIORITIES - 1);
-    uiTask.createTask(FixedConfig::UiTaskStackSize, configMAX_PRIORITIES - 0);
-    wifiTask.createTask(FixedConfig::wifiTaskStackSize, configMAX_PRIORITIES - 1);
+    /**
+     * Task開始
+     * * 以後はTask以外の操作は基本行わない
+     * * Task優先度はSeeed_Arduino_atUnified/src/sdkconfig.hと整合が取れるようにに設定している...
+     **/
+    groveTask.createTask(FixedConfig::GroveTaskStackSize, configMAX_PRIORITIES - 2);
+    buttonTask.createTask(FixedConfig::ButtonTaskStackSize, configMAX_PRIORITIES - 2);
+    uiTask.createTask(FixedConfig::UiTaskStackSize, configMAX_PRIORITIES - 1);
+    wifiTask.createTask(FixedConfig::wifiTaskStackSize, configMAX_PRIORITIES - 1); // WiFiTaskはUiTaskからの要求がなければ寝っぱなし
 
     /* AtWiFiに依存する部分がすでにいくつかのTaskを動かしているので開始操作は不要 */
 }

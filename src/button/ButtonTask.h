@@ -33,11 +33,13 @@ class ButtonTask : public FpsControlTask {
         virtual ~ButtonTask(void) {}
         const char* getName(void) override { return "ButtonTask"; }
     protected:
+        // resource
         const SharedResourceDefs& resource; /**< 共有リソース群 */
         IpcQueue<ButtonEventData>& sendQueue; /**< ボタン入力送信用 */
-        uint32_t recents[N];  /**< debounce用の履歴値 */
-        uint32_t recentsPtr;  /**< 次に書き込むrecentsのindex */
+        // variables
         uint32_t oldDebounce; /**< 前回のdebounce済の値 */
+        uint32_t recentsPtr;  /**< 次に書き込むrecentsのindex */
+        uint32_t recents[N];  /**< debounce用の履歴値 */
 
         void setup(void) override {
             // configure

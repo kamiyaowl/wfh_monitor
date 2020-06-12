@@ -35,12 +35,13 @@ class GroveTask : public FpsControlTask {
         virtual ~GroveTask(void) {}
         const char* getName(void) override { return "GroveTask"; }
     protected:
+        // resource
         const SharedResourceDefs& resource; /**< 共有リソース群 */
         IpcQueue<MeasureData>& sendQueue; /**< 測定データの送信先 */
-
+        // sensor
         TSL2561_CalculateLux& lightSensor;
         Seeed_BME680& bme680;
-
+        // configから読み出し
         bool isPrintSerial; /**< センサ取得値をSerial出力 */
         bool isPrintFile; /**< センサ取得値をSD Card出力 */
 

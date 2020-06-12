@@ -2,6 +2,7 @@
 #define WIFITASK_H
 
 #include <AtWiFi.h>
+#include "Ambient.h"
 
 #include "../SharedResourceDefs.h"
 #include "../IpcQueueDefs.h"
@@ -14,26 +15,35 @@ class WifiTask : public FpsControlTask {
          * @brief Construct a new Wifi Task object
          * 
          * @param resource 共有リソース群
-         * @param wifi Wifiインスタンス
          * @param recvQueue Wifi要求の受信Queue
          * @param sendQueue Wifi応答の送信Queue
+         * @param wifi Wifiインスタンス
          */
         WifiTask(
             const SharedResourceDefs& resource,
-            WiFiClass& wifi,
             IpcQueue<WifiTaskRequest>& recvQueue,
-            IpcQueue<WifiTaskResponse>& sendQueue
-            ) : resource(resource), wifi(wifi), recvQueue(recvQueue), sendQueue(sendQueue) {}
+            IpcQueue<WifiTaskResponse>& sendQueue,
+            WiFiClass& wifi
+            ) : resource(resource), recvQueue(recvQueue), sendQueue(sendQueue), wifi(wifi) {}
         /**
          * @brief Destroy the Wifi Task object
          */
         virtual ~WifiTask() {}
         const char* getName(void) override { return "WifiTask"; }
     protected:
+        // resource
         const SharedResourceDefs& resource; /**< 共有リソース */
-        WiFiClass& wifi; /**< Wifiを取り扱うのはこのクラスに一任するのでSharedResouceにはしない */
         IpcQueue<WifiTaskRequest>& recvQueue; /**< WifiTaskへの要求が積まれるQueue */
         IpcQueue<WifiTaskResponse>& sendQueue; /**< WifiTaskからの応答が積まれるQueue */
+        // peripheral
+        WiFiClass& wifi; /**< Wifiを取り扱うのはこのクラスに一任するのでSharedResouceにはしない */
+        // configから読み出し
+        bool isUseWifi;
+        bool isUseAmbient;
+        // ローカル変数
+        WiFiClient client;
+        Ambient ambient;
+
 
         void setup(void) override;
         bool loop(void) override;
