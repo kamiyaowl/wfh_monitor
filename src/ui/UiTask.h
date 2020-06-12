@@ -198,12 +198,14 @@ class UiTask : public FpsControlTask {
                 req.id = WifiTaskRequestId::GetWifiStatus;
                 this->sendWifiReqQueue.send(&req);
                 // TODO: Test Codeなので削除, 置き換えるときはQueue Fullに注意
-                if (this->isUseAmbient && !this->isSendingAmbient) {
-                    this->isSendingAmbient = true; // QD=1制限用
+                if (this->latestMeasureData.timestamp != 0) { // 仮でもAll Zero Dataを送らないでくれ
+                    if (this->isUseAmbient && !this->isSendingAmbient) {
+                        this->isSendingAmbient = true; // QD=1制限用
 
-                    req.id = WifiTaskRequestId::SendSensorData;
-                    req.data.measureData = this->latestMeasureData;
-                    this->sendWifiReqQueue.send(&req);
+                        req.id = WifiTaskRequestId::SendSensorData;
+                        req.data.measureData = this->latestMeasureData;
+                        this->sendWifiReqQueue.send(&req);
+                    }
                 }
             }
 
