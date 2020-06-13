@@ -75,7 +75,6 @@ class PeriodicTrigger {
         uint32_t durationMs; /**< 設定周期 */
         uint32_t latestTick; /**< 最後に通知した時刻 */
         bool isEnabled; /**< 定期実行が有効ならtrue */
-
 };
 
 #endif /* PERIODICTRIGGER_H */

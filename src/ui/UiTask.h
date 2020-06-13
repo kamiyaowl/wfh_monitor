@@ -11,6 +11,7 @@
 #include "../FpsControlTask.h"
 
 #include "control/BrightnessControl.h"
+#include "control/PeriodicTrigger.h"
 
 /**
  * @brief UserInterfaceの表示を行うタスクです
@@ -73,6 +74,7 @@ class UiTask : public FpsControlTask {
         MeasureData latestMeasureData; /**< 最後に受信した測定データ */
         ButtonEventData latestButtonState; /**< 最後に受信したボタン入力 */
         WifiStatusData latestWifiStatus; /**< 最後に受信したWiFi Status */
+        PeriodicTrigger ambientTaskTrigger; /**< Ambient定期送信タスク制御 */
 
         void setup(void) override {
             // initialize lcd
@@ -124,16 +126,67 @@ class UiTask : public FpsControlTask {
             this->latestWifiStatus.ipAddr[3] = 0x0;
             this->latestWifiStatus.status = WL_DISCONNECTED;
             this->latestWifiStatus.timestamp = 0x0;
+
+            // ambientが有効な場合のみ
+            if (this->isUseAmbient) {
+                this->ambientTaskTrigger.start(this->ambientIntervalMs);
+            } else {
+                this->ambientTaskTrigger.stop(); // 念の為
+            }
         }
+        
         bool loop(void) override {
-            // receive queue datas
+            // receive datas
+            const bool isUpdated = this->receiveDatas();
+            // periodic tasks
+            brightness.update(this->latestMeasureData.visibleLux);
+            ambientTaskTrigger.update([&](){
+                // Queueがあいていれば、WifiStatus確認とAmbient更新を投げる
+                if (this->sendWifiReqQueue.remainNum() == 0) {
+                    WifiTaskRequest req;
+                    req.id = WifiTaskRequestId::GetWifiStatus;
+                    this->sendWifiReqQueue.send(&req);
+
+                    // SensorDataがAll Zeroの場合は送信しない
+                    if (this->latestMeasureData.timestamp != 0) {
+                        if (this->isUseAmbient && !this->isSendingAmbient) {
+                            this->isSendingAmbient = true; // QD=1制限用
+
+                            req.id = WifiTaskRequestId::SendSensorData;
+                            req.data.measureData = this->latestMeasureData;
+                            this->sendWifiReqQueue.send(&req);
+                        }
+                    }
+                }
+            });
+
+            // ui update
+            this->drawDebugPrint();
+
+            // for debug
+            this->counter++;
+
+            return false; /**< no abort */
+        }
+
+        /**
+         * @brief receiveQueueの中身を受信します
+         * @retval true 何かしらのデータを受信した
+         * @retval false 有効なデータは受信Queueには存在しない
+         */
+        bool receiveDatas(void) {
+            bool isUpdated = false;
             if (this->recvMeasureDataQueue.remainNum() > 0) {
+                isUpdated = true;
                 this->recvMeasureDataQueue.receive(&this->latestMeasureData, false);
             }
             if (this->recvButtonStateQueue.remainNum() > 0) {
+                isUpdated = true;
                 this->recvButtonStateQueue.receive(&this->latestButtonState, false);
             }
             if (this->recvWifiRespQueue.remainNum() > 0) {
+                isUpdated = true;
+
                 WifiTaskResponse resp;
                 this->recvWifiRespQueue.receive(&resp, false);
                 switch (resp.id) {
@@ -151,11 +204,13 @@ class UiTask : public FpsControlTask {
                         break;
                 }
             }
+            return isUpdated;
+        }
 
-            // backlight
-            brightness.update(this->latestMeasureData.visibleLux);
-
-            // test
+        /**
+         * @brief LCDに現在の値を表示します。飾り気がないです
+         */
+        void drawDebugPrint(void) {
             this->lcd.setCursor(0,0);
             this->lcd.printf("#UiTask\n");
             this->lcd.printf("systick = %d\n", SysTimer::getTickCount());
@@ -191,28 +246,6 @@ class UiTask : public FpsControlTask {
             this->lcd.printf("sending = %d\n"         , this->isSendingAmbient);
             this->lcd.printf("result  = %d\n"         , this->wasSucceedSendAmbient);
             this->lcd.printf("\n");
-
-            // TODO: #54 常にStatus監視しないようにする(定期実行としたい)
-            if (this->sendWifiReqQueue.remainNum() == 0) {
-                WifiTaskRequest req;
-                req.id = WifiTaskRequestId::GetWifiStatus;
-                this->sendWifiReqQueue.send(&req);
-                // TODO: Test Codeなので削除, 置き換えるときはQueue Fullに注意
-                if (this->latestMeasureData.timestamp != 0) { // 仮でもAll Zero Dataを送らないでくれ
-                    if (this->isUseAmbient && !this->isSendingAmbient) {
-                        this->isSendingAmbient = true; // QD=1制限用
-
-                        req.id = WifiTaskRequestId::SendSensorData;
-                        req.data.measureData = this->latestMeasureData;
-                        this->sendWifiReqQueue.send(&req);
-                    }
-                }
-            }
-
-            // for debug
-            this->counter++;
-
-            return false; /**< no abort */
         }
 };
 
