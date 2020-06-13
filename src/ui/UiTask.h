@@ -29,7 +29,6 @@ class UiTask : public FpsControlTask {
          * @param sendWifiReqQueue Wifi関係の要求Queue
          * @param recvWifiRespQueue Wifi関係の応答Queue
          * @param lcd LCD Library、事前にinitは済ませておくこと(Wio Terminalに付随しているため)
-         * @param sprite 
          */
         UiTask(
             const SharedResourceDefs& resource,
@@ -37,15 +36,13 @@ class UiTask : public FpsControlTask {
             IpcQueue<ButtonEventData>& recvButtonStateQueue,
             IpcQueue<WifiTaskRequest>& sendWifiReqQueue,
             IpcQueue<WifiTaskResponse>& recvWifiRespQueue,
-            LGFX& lcd,
-            LGFX_Sprite& sprite
+            LGFX& lcd
         ): resource(resource),           
            recvMeasureDataQueue(recvMeasureDataQueue),
            recvButtonStateQueue(recvButtonStateQueue),
            sendWifiReqQueue(sendWifiReqQueue),
            recvWifiRespQueue(recvWifiRespQueue),
            lcd(lcd),
-           sprite(sprite),
            brightness(lcd) {}
 
         /**
@@ -61,7 +58,6 @@ class UiTask : public FpsControlTask {
         IpcQueue<WifiTaskResponse>& recvWifiRespQueue; /**< Wifi応答  */
         // hw
         LGFX& lcd;
-        LGFX_Sprite& sprite;
         // hw resourceを使って初期化が必要
         BrightnessControl<N, LGFX> brightness;
         // configから読み出し
@@ -134,7 +130,7 @@ class UiTask : public FpsControlTask {
                 this->ambientTaskTrigger.stop(); // 念の為
             }
         }
-        
+
         bool loop(void) override {
             // receive datas
             const bool isUpdated = this->receiveDatas();

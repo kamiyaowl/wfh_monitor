@@ -34,7 +34,6 @@ static TwoWire& wireL = Wire;  // left  port
 #include <AtWiFi.h>
 
 static LGFX lcd;               
-static LGFX_Sprite sprite(&lcd);
 static TSL2561_CalculateLux &lightSensor = TSL2561; // TSL2561 Digital Light Sensor
 static Seeed_BME680 bme680(FixedConfig::Bme680SlaveAddr);
 static SDFS& sd = SD;
@@ -79,7 +78,7 @@ static SharedResourceDefs sharedResources = {
 
 static GroveTask groveTask(sharedResources, measureDataQueue, lightSensor, bme680);
 static ButtonTask<FixedConfig::ButtonTaskDebounceNum> buttonTask(sharedResources, buttonStateQueue);
-static UiTask<FixedConfig::UiTaskBrightnessKeyPoint> uiTask(sharedResources, measureDataQueue, buttonStateQueue, wifiRequestQueue, wifiResponseQueue, lcd, sprite);
+static UiTask<FixedConfig::UiTaskBrightnessKeyPoint> uiTask(sharedResources, measureDataQueue, buttonStateQueue, wifiRequestQueue, wifiResponseQueue, lcd);
 static WifiTask wifiTask(sharedResources, wifiRequestQueue, wifiResponseQueue, wifi);
 /****************************** Setup Subfunction ******************************/
 static void setupLcd(void) {

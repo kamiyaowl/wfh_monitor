@@ -54,8 +54,6 @@ bool WifiTask::invokeGetWifiStatus(const WifiTaskRequest& req, WifiTaskResponse&
 }
 
 bool WifiTask::invokeSend(const WifiTaskRequest& req, WifiTaskResponse& resp) {
-    //TODO: 詳細なエラーステータスを残す
-
     // Wifi及びAmbient無効の場合は何もしない
     if (!this->isUseWifi || !this->isUseAmbient) {
         return false;
