@@ -45,6 +45,7 @@ struct ChartConfig {
     AxisY axisY1; /**< 左側のY軸設定 */
     Color axisColor; /**< 軸の色 */
     uint32_t axisTickness; /**< 軸の太さ */
+    Color backColor; /**< 背景色 */
 };
 
 /**
@@ -88,7 +89,6 @@ class Chart {
                 // TODO: Spriteを一旦開放する
             }
             // config validation
-            if (config.axisX.n == 0) return false;
             if (config.rect.width == 0) return false;
             if (config.rect.height == 0) return false;
 
@@ -96,6 +96,12 @@ class Chart {
             this->config = config;
             this->xIndex = 0;
             this->latestPlotXIndex = UINT32_MAX; // 初回にplotされたときにSprite準備が走るように
+
+            // 補正する
+            if ((this->config.axisX.n == 0) || (this->config.rect.width < this->config.axisX.n)) {
+                // 未指定もしくは違反していた場合、横幅分だけplotしてあげれば平和
+                this->config.axisX.n = this->config.rect.width;
+            }
 
             // initialize sprite
             // TODO: Spriteを確保する, できなければfalseで返す
@@ -112,14 +118,11 @@ class Chart {
          * 
          * @param y 最新値
          * @param plotConfig 描画設定
-         * 
-         * @retval true 描画完了
-         * @retval false 描画失敗
          */
-        bool plot(float y, const PlotConfig& plotConfig) {
+        void plot(float y, const PlotConfig& plotConfig) {
             // 未初期化なら失敗
             if (!this->isInitialized) {
-                return false;
+                return;
             }
             // 初めて現在のX位置で描画された際のSprite準備
             if (this->xIndex != this->latestPlotXIndex) {
@@ -136,7 +139,7 @@ class Chart {
         void flush(void) {
             // 未初期化なら失敗
             if (!this->isInitialized) {
-                return false;
+                return;
             }
             // TODO: sritePlotAreaにspriteCurrentDivisionの内容を確定させる
             if (this->isDirty) {
@@ -170,13 +173,26 @@ class Chart {
         void draw(LovyanGFX& drawDst, bool isInit) {
             // 未初期化なら失敗
             if (!this->isInitialized) {
-                return false;
+                return;
             }
             // 全描画が必要な場合
             if (isInit) {
                 // TODO: Y0, Y1 軸を描く
             }
             // TODO: spritePlotAreaの内容を反映させる
+
+            // Test
+            drawDst.fillRect(
+                this->config.rect.x,
+                this->config.rect.y,
+                this->config.rect.width,
+                this->config.rect.height,
+                drawDst.color888(
+                    this->config.backColor.r, 
+                    this->config.backColor.g, 
+                    this->config.backColor.b
+                    )
+                );
         }
     protected:
         // Buffer

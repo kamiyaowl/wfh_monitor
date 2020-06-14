@@ -15,7 +15,7 @@
 
 /****************************** Peripheral ******************************/
 // LCDにMessageを出力してその場で無限ループして停止します
-#define PANIC(...) ({ Serial.printf(__VA_ARGS__); while(true){} })
+#define PANIC(...) ({ Serial.printf(__VA_ARGS__); lcd.printf(__VA_ARGS__); while(true){} })
 
 /****************************** Peripheral ******************************/
 #include <SPI.h>

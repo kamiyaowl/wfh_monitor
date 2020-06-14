@@ -12,6 +12,7 @@
 
 #include "control/BrightnessControl.h"
 #include "control/PeriodicTrigger.h"
+#include "control/Chart.h"
 
 /**
  * @brief UserInterfaceの表示を行うタスクです
@@ -67,17 +68,58 @@ class UiTask : public FpsControlTask {
         bool isSendingAmbient; /**< ambientへデータ送信中の場合はtrue, QD=1制御用フラグ */
         bool wasSucceedSendAmbient; /**< 最後にAmbientにデータ送信した結果 */
         uint32_t counter; /**< for debug*/
+        uint32_t lastestDrawChatTimestamp; /**< 最後にchartに書いたデータのtimestamp */
         MeasureData latestMeasureData; /**< 最後に受信した測定データ */
         ButtonEventData latestButtonState; /**< 最後に受信したボタン入力 */
         WifiStatusData latestWifiStatus; /**< 最後に受信したWiFi Status */
         PeriodicTrigger ambientTaskTrigger; /**< Ambient定期送信タスク制御 */
+        Chart chart; /**< センサー値のトレンドグラフ */
 
         void setup(void) override {
             // initialize lcd
             this->lcd.setTextSize(1);
 
+            // init chart
+            // TODO: chart, Brightnessも需要があればjsonから読み出せるようにしたい
+            constexpr ChartConfig chartConfig = {
+                .mode = ChartMode::Infinite,
+                .rect = {
+                    .x = 0,
+                    .y = 0,
+                    .width = 320,
+                    .height = 240,
+                },
+                .axisX = {
+                    .n = 0, // 幅に合わせる
+                    .isVisible = true,
+                },
+                .axisY0 = {
+                    .min = -10.0f,
+                    .max = 120.0f,
+                    .isVisible = true,
+                },
+                .axisY1 = {
+                    .min =  900.0f,
+                    .max = 1100.0f,
+                    .isVisible = true,
+                },
+                .axisColor = {
+                    .r = 255,
+                    .g = 255,
+                    .b = 255,
+                },
+                .axisTickness = 2,
+                .backColor = {
+                    .r = 100,
+                    .g = 100,
+                    .b = 100,
+                },
+            };
+            this->chart.init(chartConfig);
+            this->drawChart(true); // 初回は軸などを書いておく
+
             // configure
-            static constexpr BrightnessSetting brightnessSetting[N] = { // TODO: 設定ファイルから色々できるといいなぁ...
+            static constexpr BrightnessSetting brightnessSetting[N] = {
                 { .visibleLux =  50.0f , .brightness = 20 },
                 { .visibleLux = 120.0f , .brightness = 100 },
                 { .visibleLux = 180.0f , .brightness = 200 },
@@ -106,6 +148,7 @@ class UiTask : public FpsControlTask {
             this->isSendingAmbient = false;
             this->wasSucceedSendAmbient = false;
             this->counter = 0x0;
+            this->lastestDrawChatTimestamp = 0x0;
             this->latestMeasureData.visibleLux = 0.0f;
             this->latestMeasureData.tempature = 0.0f;
             this->latestMeasureData.pressure = 0.0f;
@@ -129,6 +172,7 @@ class UiTask : public FpsControlTask {
             } else {
                 this->ambientTaskTrigger.stop(); // 念の為
             }
+
         }
 
         bool loop(void) override {
@@ -157,6 +201,7 @@ class UiTask : public FpsControlTask {
             });
 
             // ui update
+            this->drawChart(false);
             this->drawDebugPrint();
 
             // for debug
@@ -201,6 +246,66 @@ class UiTask : public FpsControlTask {
                 }
             }
             return isUpdated;
+        }
+
+        /**
+         * @brief グラフを描画します
+         * 
+         * @param isFirst 初回だけは全部書く
+         */
+        void drawChart(bool isFirst) {
+            constexpr PlotConfig plotTemp = {
+                .axisYIndex = 0,
+                .r = 2,
+                .color = {
+                    r: 200,
+                    g: 100,
+                    b: 0,
+                },
+            };
+            constexpr PlotConfig plotHumi = {
+                .axisYIndex = 0,
+                .r = 2,
+                .color = {
+                    r: 0,
+                    g: 100,
+                    b: 200,
+                },
+            };
+            constexpr PlotConfig plotPressure = {
+                .axisYIndex = 1,
+                .r = 2,
+                .color = {
+                    r: 0,
+                    g: 0,
+                    b: 200,
+                },
+            };
+            constexpr PlotConfig plotGas = {
+                .axisYIndex = 1,
+                .r = 2,
+                .color = {
+                    r: 100,
+                    g: 100,
+                    b: 0,
+                },
+            };
+            
+            // データが更新されてたときのみ
+            if (!isFirst && (this->lastestDrawChatTimestamp == this->latestMeasureData.timestamp)) {
+                return;
+            }
+            this->lastestDrawChatTimestamp = this->latestMeasureData.timestamp;
+            // 初回でなければデータを更新
+            if (!isFirst) {
+                this->chart.plot(this->latestMeasureData.tempature , plotTemp);
+                this->chart.plot(this->latestMeasureData.humidity  , plotHumi);
+                this->chart.plot(this->latestMeasureData.pressure  , plotPressure);
+                this->chart.plot(this->latestMeasureData.gas       , plotGas);
+                this->chart.flush();
+            }
+            // LCDに描画
+            this->chart.draw(this->lcd, isFirst);
         }
 
         /**
