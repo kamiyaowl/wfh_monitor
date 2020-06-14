@@ -116,7 +116,6 @@ class UiTask : public FpsControlTask {
                 },
             };
             this->chart.init(chartConfig);
-            this->drawChart(true); // 初回は軸などを書いておく
 
             // configure
             static constexpr BrightnessSetting brightnessSetting[N] = {
@@ -201,8 +200,8 @@ class UiTask : public FpsControlTask {
             });
 
             // ui update
-            this->drawChart(false);
-            this->drawDebugPrint();
+            this->drawChart(this->lcd);
+            this->drawDebugPrint(this->lcd);
 
             // for debug
             this->counter++;
@@ -250,10 +249,8 @@ class UiTask : public FpsControlTask {
 
         /**
          * @brief グラフを描画します
-         * 
-         * @param isFirst 初回だけは全部書く
          */
-        void drawChart(bool isFirst) {
+        void drawChart(LovyanGFX& drawDst) {
             constexpr PlotConfig plotTemp = {
                 .axisYIndex = 0,
                 .r = 2,
@@ -292,61 +289,60 @@ class UiTask : public FpsControlTask {
             };
             
             // データが更新されてたときのみ
-            if (!isFirst && (this->lastestDrawChatTimestamp == this->latestMeasureData.timestamp)) {
+            if (this->lastestDrawChatTimestamp == this->latestMeasureData.timestamp) {
                 return;
             }
             this->lastestDrawChatTimestamp = this->latestMeasureData.timestamp;
-            // 初回でなければデータを更新
-            if (!isFirst) {
-                this->chart.plot(this->latestMeasureData.tempature , plotTemp);
-                this->chart.plot(this->latestMeasureData.humidity  , plotHumi);
-                this->chart.plot(this->latestMeasureData.pressure  , plotPressure);
-                this->chart.plot(this->latestMeasureData.gas       , plotGas);
-                this->chart.flush();
-            }
+
+            // データを更新
+            this->chart.plot(this->latestMeasureData.tempature , plotTemp);
+            this->chart.plot(this->latestMeasureData.humidity  , plotHumi);
+            this->chart.plot(this->latestMeasureData.pressure  , plotPressure);
+            this->chart.plot(this->latestMeasureData.gas       , plotGas);
+            this->chart.flush();
             // LCDに描画
-            this->chart.draw(this->lcd, isFirst);
+            this->chart.draw(drawDst);
         }
 
         /**
          * @brief LCDに現在の値を表示します。飾り気がないです
          */
-        void drawDebugPrint(void) {
-            this->lcd.setCursor(0,0);
-            this->lcd.printf("#UiTask\n");
-            this->lcd.printf("systick = %d\n", SysTimer::getTickCount());
-            this->lcd.printf("counter = %d\n", this->counter);
-            this->lcd.printf("maxFps  = %f\n", this->getFpsWithoutDelay());
-            this->lcd.printf("\n");
+        void drawDebugPrint(LovyanGFX& drawDst) {
+            drawDst.setCursor(0, 0);
+            drawDst.printf("#UiTask\n");
+            drawDst.printf("systick = %d\n", SysTimer::getTickCount());
+            drawDst.printf("counter = %d\n", this->counter);
+            drawDst.printf("maxFps  = %f\n", this->getFpsWithoutDelay());
+            drawDst.printf("\n");
 
-            this->lcd.printf("#SensorData\n");
-            this->lcd.printf("visibleLux = %f\n", this->latestMeasureData.visibleLux);
-            this->lcd.printf("tempature  = %f\n", this->latestMeasureData.tempature);
-            this->lcd.printf("pressure   = %f\n", this->latestMeasureData.pressure);
-            this->lcd.printf("humidity   = %f\n", this->latestMeasureData.humidity);
-            this->lcd.printf("gas        = %f\n", this->latestMeasureData.gas);
-            this->lcd.printf("timestamp  = %u\n", this->latestMeasureData.timestamp);
-            this->lcd.printf("\n");
+            drawDst.printf("#SensorData\n");
+            drawDst.printf("visibleLux = %f\n", this->latestMeasureData.visibleLux);
+            drawDst.printf("tempature  = %f\n", this->latestMeasureData.tempature);
+            drawDst.printf("pressure   = %f\n", this->latestMeasureData.pressure);
+            drawDst.printf("humidity   = %f\n", this->latestMeasureData.humidity);
+            drawDst.printf("gas        = %f\n", this->latestMeasureData.gas);
+            drawDst.printf("timestamp  = %u\n", this->latestMeasureData.timestamp);
+            drawDst.printf("\n");
 
-            this->lcd.printf("#Button\n");
-            this->lcd.printf("raw       = %08x\n", this->latestButtonState.raw);
-            this->lcd.printf("debounce  = %08x\n", this->latestButtonState.debounce);
-            this->lcd.printf("push      = %08x\n", this->latestButtonState.push);
-            this->lcd.printf("release   = %08x\n", this->latestButtonState.release);
-            this->lcd.printf("timestamp = %u\n"  , this->latestButtonState.timestamp);
-            this->lcd.printf("\n");
+            drawDst.printf("#Button\n");
+            drawDst.printf("raw       = %08x\n", this->latestButtonState.raw);
+            drawDst.printf("debounce  = %08x\n", this->latestButtonState.debounce);
+            drawDst.printf("push      = %08x\n", this->latestButtonState.push);
+            drawDst.printf("release   = %08x\n", this->latestButtonState.release);
+            drawDst.printf("timestamp = %u\n"  , this->latestButtonState.timestamp);
+            drawDst.printf("\n");
 
-            this->lcd.printf("#Wifi\n");
-            this->lcd.printf("status    = %d\n"         , this->latestWifiStatus.status);
-            this->lcd.printf("ipAddr    = %d.%d.%d.%d\n", this->latestWifiStatus.ipAddr[0], this->latestWifiStatus.ipAddr[1], this->latestWifiStatus.ipAddr[2], this->latestWifiStatus.ipAddr[3]);
-            this->lcd.printf("timestamp = %u\n"         , this->latestWifiStatus.timestamp);
-            this->lcd.printf("\n");
+            drawDst.printf("#Wifi\n");
+            drawDst.printf("status    = %d\n"         , this->latestWifiStatus.status);
+            drawDst.printf("ipAddr    = %d.%d.%d.%d\n", this->latestWifiStatus.ipAddr[0], this->latestWifiStatus.ipAddr[1], this->latestWifiStatus.ipAddr[2], this->latestWifiStatus.ipAddr[3]);
+            drawDst.printf("timestamp = %u\n"         , this->latestWifiStatus.timestamp);
+            drawDst.printf("\n");
 
-            this->lcd.printf("#Ambient\n");
-            this->lcd.printf("use     = %d\n"         , this->isUseAmbient);
-            this->lcd.printf("sending = %d\n"         , this->isSendingAmbient);
-            this->lcd.printf("result  = %d\n"         , this->wasSucceedSendAmbient);
-            this->lcd.printf("\n");
+            drawDst.printf("#Ambient\n");
+            drawDst.printf("use     = %d\n"         , this->isUseAmbient);
+            drawDst.printf("sending = %d\n"         , this->isSendingAmbient);
+            drawDst.printf("result  = %d\n"         , this->wasSucceedSendAmbient);
+            drawDst.printf("\n");
         }
 };
 

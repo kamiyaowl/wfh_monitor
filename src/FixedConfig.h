@@ -7,6 +7,8 @@
  * @brief コンパイル時に設定が必要な定数群です
  */
 namespace FixedConfig {
+    static constexpr uint32_t LcdWidth                 = 320;           /**< LCD横幅 */
+    static constexpr uint32_t LcdHeight                = 240;           /**< LCD高さ */
     static constexpr uint8_t  Bme680SlaveAddr          = 0x76;          /**< BME680のSlave Addr */
     static constexpr uint32_t WaitForPorMs             = 1000;          /**< POR後の待機時間 */
     static constexpr uint32_t SerialBaudrate           = 115200;        /**< UART baudrate */

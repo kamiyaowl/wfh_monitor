@@ -168,17 +168,13 @@ class Chart {
          * @brief 引数で指定されたLCDもしくはSpriteに描画します
          * 
          * @param drawDst 描画先lcd or offscreen bufferを指定します
-         * @param isInit 初回、もしくは別画面からの遷移でフルで描画が必要な場合はtrue, falseの場合はY軸の描画などは省略されます
          */
-        void draw(LovyanGFX& drawDst, bool isInit) {
+        void draw(LovyanGFX& drawDst) {
             // 未初期化なら失敗
             if (!this->isInitialized) {
                 return;
             }
-            // 全描画が必要な場合
-            if (isInit) {
-                // TODO: Y0, Y1 軸を描く
-            }
+            // TODO: Y0, Y1 軸を描く
             // TODO: spritePlotAreaの内容を反映させる
 
             // Test
