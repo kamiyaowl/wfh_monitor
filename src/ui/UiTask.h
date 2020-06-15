@@ -80,9 +80,8 @@ class UiTask : public FpsControlTask {
             this->lcd.setTextSize(1);
 
             // init chart
-            // TODO: chart, Brightnessも需要があればjsonから読み出せるようにしたい
             constexpr ChartConfig chartConfig = {
-                .mode = ChartMode::Infinite,
+                .mode = ChartMode::Overwrite,
                 .rect = {
                     .x      =  10,
                     .y      =  40,
@@ -104,12 +103,12 @@ class UiTask : public FpsControlTask {
                 },
                 .axisTickness = 2,
                 .backColor = {
-                    .r = 100,
-                    .g = 100,
-                    .b = 100,
+                    .r = 10,
+                    .g = 10,
+                    .b = 10,
                 },
             };
-            this->chart.init(chartConfig);
+            this->chart.init(this->lcd, chartConfig);
 
             // configure
             static constexpr BrightnessSetting brightnessSetting[N] = {
@@ -196,6 +195,8 @@ class UiTask : public FpsControlTask {
             // ui update
             this->drawChart(this->lcd);
             // this->drawDebugPrint(this->lcd);
+            this->lcd.setCursor(0, 0);
+            this->lcd.printf("systick = %d\n", SysTimer::getTickCount());
 
             // for debug
             this->counter++;
@@ -270,10 +271,18 @@ class UiTask : public FpsControlTask {
                 },
             };
             constexpr PlotConfig plotGas = {
-                .axisYIndex = 1,
+                .axisYIndex = 0,
                 .color = {
                     r: 100,
                     g: 100,
+                    b: 0,
+                },
+            };
+            constexpr PlotConfig plotVisibleLux = {
+                .axisYIndex = 0,
+                .color = {
+                    r: 100,
+                    g: 200,
                     b: 0,
                 },
             };
@@ -285,13 +294,12 @@ class UiTask : public FpsControlTask {
             this->lastestDrawChatTimestamp = this->latestMeasureData.timestamp;
 
             // データを更新
-            this->chart.plot(this->latestMeasureData.tempature , plotTemp);
-            this->chart.plot(this->latestMeasureData.humidity  , plotHumi);
-            this->chart.plot(this->latestMeasureData.pressure  , plotPressure);
-            this->chart.plot(this->latestMeasureData.gas       , plotGas);
-            this->chart.flush();
-            // LCDに描画
-            this->chart.draw(drawDst);
+            this->chart.plot(this->lcd, this->latestMeasureData.tempature  , plotTemp);
+            this->chart.plot(this->lcd, this->latestMeasureData.humidity   , plotHumi);
+            this->chart.plot(this->lcd, this->latestMeasureData.pressure   , plotPressure);
+            this->chart.plot(this->lcd, this->latestMeasureData.gas        , plotGas);
+            this->chart.plot(this->lcd, this->latestMeasureData.visibleLux , plotVisibleLux);
+            this->chart.next(this->lcd); // X座標を勧めておく
         }
 
         /**

@@ -50,7 +50,7 @@ namespace GlobalConfigDefaultValues {
     static constexpr uint32_t AmbientIntervalMs      = 60000;
     static constexpr uint32_t AmbientChannelId       = 0;
     static constexpr char*    AmbientWriteKey        = "your writekey";
-    static constexpr uint32_t GroveTaskFps           = 2;
+    static constexpr uint32_t GroveTaskFps           = 30;
     static constexpr uint32_t ButtonTaskFps          = 60;
     static constexpr uint32_t UiTaskFps              = 30;
     static constexpr uint32_t WifiTaskFps            = 1;
