@@ -18,20 +18,11 @@ enum class ChartMode : uint32_t {
 };
 
 /**
- * @brief X軸の設定
- */
-struct AxisX {
-    uint32_t n; /**< X軸の表示点数 */
-    bool isVisible; /**< 軸を非表示にする場合はfalse */
-};
-
-/**
  * @brief  Y軸の設定
  */
 struct AxisY {
     float min; /**< 最小値 */
     float max; /**< 最大値 */
-    bool isVisible; /**< 軸を非表示にする場合はfalse */
 };
 
 /**
@@ -40,7 +31,6 @@ struct AxisY {
 struct ChartConfig {
     ChartMode mode; /**< 描画設定 */
     Rect  rect; /**< 表示位置とサイズ */
-    AxisX axisX; /**< X軸設定 */
     AxisY axisY0; /**< 左側のY軸設定 */
     AxisY axisY1; /**< 左側のY軸設定 */
     Color axisColor; /**< 軸の色 */
@@ -54,7 +44,6 @@ struct ChartConfig {
  */
 struct PlotConfig {
     uint32_t axisYIndex; /**< Y軸のIndex、左なら0、右なら1を指定(それ以上に軸を増やす実装は未対応) */
-    uint32_t r; /**< 点の大きさ */
     Color color; /**< 色 */
 };
 
@@ -86,7 +75,6 @@ class Chart {
             // release buffer
             if (this->isInitialized) {
                 this->isInitialized = false;
-                // TODO: Spriteを一旦開放する
             }
             // config validation
             if (config.rect.width == 0) return false;
@@ -96,15 +84,6 @@ class Chart {
             this->config = config;
             this->xIndex = 0;
             this->latestPlotXIndex = UINT32_MAX; // 初回にplotされたときにSprite準備が走るように
-
-            // 補正する
-            if ((this->config.axisX.n == 0) || (this->config.rect.width < this->config.axisX.n)) {
-                // 未指定もしくは違反していた場合、横幅分だけplotしてあげれば平和
-                this->config.axisX.n = this->config.rect.width;
-            }
-
-            // initialize sprite
-            // TODO: Spriteを確保する, できなければfalseで返す
 
             // 設定完了
             this->isInitialized = true;
@@ -129,7 +108,6 @@ class Chart {
                 this->latestPlotXIndex = this->xIndex;
                 // TODO: Sprite準備
             }
-            // TODO: spriteCurrentDivisionにPlotする
             this->isDirty = true; // flush時に昔のゴミを上書きしないための対策
         }
 
@@ -141,22 +119,20 @@ class Chart {
             if (!this->isInitialized) {
                 return;
             }
-            // TODO: sritePlotAreaにspriteCurrentDivisionの内容を確定させる
             if (this->isDirty) {
                 this->isDirty = false;
-
             }
             // x indexをすすめる
             switch (this->config.mode) {
                 case ChartMode::Overwrite:
                     // 全部描画したら最初に戻る
-                    this->xIndex = (this->xIndex + 1) % this->config.axisX.n;
+                    this->xIndex = (this->xIndex + 1) % this->config.rect.width;
                     break;
                 case ChartMode::Scroll:
                 case ChartMode::Infinite:
                     // いずれも一番最後の領域に描く
                     // 差分は0~n-1のSpriteをシフトするか圧縮するかの差
-                    this->xIndex = std::min(this->xIndex + 1, this->config.axisX.n);
+                    this->xIndex = std::min(this->xIndex + 1, this->config.rect.width);
                     break;
                 default:
                     // 未実装
@@ -174,35 +150,97 @@ class Chart {
             if (!this->isInitialized) {
                 return;
             }
-            // TODO: Y0, Y1 軸を描く
-            // TODO: spritePlotAreaの内容を反映させる
 
-            // Test
-            drawDst.fillRect(
-                this->config.rect.x,
-                this->config.rect.y,
-                this->config.rect.width,
-                this->config.rect.height,
+            // 軸を描く
+            const auto axisColor = 
                 drawDst.color888(
-                    this->config.backColor.r, 
-                    this->config.backColor.g, 
-                    this->config.backColor.b
-                    )
-                );
+                    this->config.axisColor.r, 
+                    this->config.axisColor.g, 
+                    this->config.axisColor.b
+                    );
+            for (uint32_t t = 0; t < this->config.axisTickness; t++) {
+                // top
+                drawDst.drawLine(
+                    this->config.rect.x,
+                    this->config.rect.y + t,
+                    this->config.rect.x + this->config.rect.width,
+                    this->config.rect.y + t,
+                    axisColor
+                    );
+                // bottom
+                drawDst.drawLine(
+                    this->config.rect.x,
+                    this->config.rect.y + this->config.rect.height - t,
+                    this->config.rect.x + this->config.rect.width,
+                    this->config.rect.y + this->config.rect.height - t,
+                    axisColor
+                    );
+                // left
+                drawDst.drawLine(
+                    this->config.rect.x + t,
+                    this->config.rect.y,
+                    this->config.rect.x + t,
+                    this->config.rect.y + this->config.rect.height,
+                    axisColor
+                    );
+                // right
+                drawDst.drawLine(
+                    this->config.rect.x + this->config.rect.width - t,
+                    this->config.rect.y,
+                    this->config.rect.x + this->config.rect.width - t,
+                    this->config.rect.y + this->config.rect.height,
+                    axisColor
+                    );
+            }
         }
     protected:
-        // Buffer
-        LGFX_Sprite spritePlotArea; /**< X軸を含むPlotArea */
-        LGFX_Sprite spriteAxisY0; /**< 左側のY軸 */
-        LGFX_Sprite spriteAxisY1; /**< 右側のY軸 */
-        LGFX_Sprite spriteCurrentDivision; /**< spritePlotAreaの内、今回描画しようとしている */
-        LGFX_Sprite spritePlotAreaTemp;
         // local variables
         bool isInitialized; /**< initが呼ばれていなければfalse */
         bool isDirty; /**< 今回のxIndexでplotが一度でもされたらtrue */
         ChartConfig config; /**< 描画設定 */
         uint32_t xIndex; /**< X軸のデータ位置 */
         uint32_t latestPlotXIndex; /**< 最後にPlotを行ったX軸のデータ位置 */
+
+        /**
+         * @brief 描画領域の横幅を取得します
+         * 
+         * @return constexpr uint32_t 
+         */
+        constexpr uint32_t getPlotWidth(void) {
+            const uint32_t y0 = this->config.axisTickness;
+            const uint32_t y1 = this->config.axisTickness;
+            return this->config.rect.width - (y0 + y1);
+        }
+
+        /**
+         * @brief 描画領域の高さを取得します
+         * 
+         * @return constexpr uint32_t 
+         */
+        constexpr uint32_t getPlotHeight(void) {
+            const uint32_t x0 = this->config.axisTickness;
+            const uint32_t x1 = this->config.axisTickness;
+            return this->config.rect.height - (x0 + x1);
+        }
+
+        /**
+         * @brief config.rect.xに対するグラフ描画位置の左上を取得します
+         * 
+         * @return constexpr uint32_t 
+         */
+        constexpr uint32_t getPlotOffsetX0(void) {
+            return this->config.axisTickness;
+        }
+
+        /**
+         * @brief config.rect.yに対するグラフ描画位置の左上を取得します
+         * 
+         * @return constexpr uint32_t 
+         */
+        constexpr uint32_t getPlotOffsetY0(void) {
+            return this->config.axisTickness;
+        }
+
 
 };
 

@@ -84,24 +84,18 @@ class UiTask : public FpsControlTask {
             constexpr ChartConfig chartConfig = {
                 .mode = ChartMode::Infinite,
                 .rect = {
-                    .x = 0,
-                    .y = 0,
-                    .width = 320,
-                    .height = 240,
-                },
-                .axisX = {
-                    .n = 0, // 幅に合わせる
-                    .isVisible = true,
+                    .x      =  10,
+                    .y      =  40,
+                    .width  = 300,
+                    .height = 180,
                 },
                 .axisY0 = {
                     .min = -10.0f,
                     .max = 120.0f,
-                    .isVisible = true,
                 },
                 .axisY1 = {
                     .min =  900.0f,
                     .max = 1100.0f,
-                    .isVisible = true,
                 },
                 .axisColor = {
                     .r = 255,
@@ -201,7 +195,7 @@ class UiTask : public FpsControlTask {
 
             // ui update
             this->drawChart(this->lcd);
-            this->drawDebugPrint(this->lcd);
+            // this->drawDebugPrint(this->lcd);
 
             // for debug
             this->counter++;
@@ -253,7 +247,6 @@ class UiTask : public FpsControlTask {
         void drawChart(LovyanGFX& drawDst) {
             constexpr PlotConfig plotTemp = {
                 .axisYIndex = 0,
-                .r = 2,
                 .color = {
                     r: 200,
                     g: 100,
@@ -262,7 +255,6 @@ class UiTask : public FpsControlTask {
             };
             constexpr PlotConfig plotHumi = {
                 .axisYIndex = 0,
-                .r = 2,
                 .color = {
                     r: 0,
                     g: 100,
@@ -271,7 +263,6 @@ class UiTask : public FpsControlTask {
             };
             constexpr PlotConfig plotPressure = {
                 .axisYIndex = 1,
-                .r = 2,
                 .color = {
                     r: 0,
                     g: 0,
@@ -280,7 +271,6 @@ class UiTask : public FpsControlTask {
             };
             constexpr PlotConfig plotGas = {
                 .axisYIndex = 1,
-                .r = 2,
                 .color = {
                     r: 100,
                     g: 100,
