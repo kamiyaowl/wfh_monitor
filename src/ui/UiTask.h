@@ -77,7 +77,7 @@ class UiTask : public FpsControlTask {
 
         void setup(void) override {
             // initialize lcd
-            this->lcd.setTextSize(1);
+            this->lcd.setFont(&Font2);
 
             // init chart
             constexpr ChartConfig chartConfig = {
@@ -194,9 +194,14 @@ class UiTask : public FpsControlTask {
 
             // ui update
             this->drawChart(this->lcd);
-            // this->drawDebugPrint(this->lcd);
+            this->lcd.setTextSize(2);
             this->lcd.setCursor(0, 0);
-            this->lcd.printf("systick = %d\n", SysTimer::getTickCount());
+            this->lcd.setTextColor(this->lcd.color888(200, 100, 0), 0x000000);
+            this->lcd.printf("%2.1fC ", this->latestMeasureData.tempature);
+            this->lcd.setTextColor(this->lcd.color888(  0, 100, 200), 0x000000);
+            this->lcd.printf("%2.1f%% ", this->latestMeasureData.humidity);
+            this->lcd.setTextColor(this->lcd.color888(100, 200,   0), 0x000000);
+            this->lcd.printf("%2.1fhPa", this->latestMeasureData.pressure);
 
             // for debug
             this->counter++;
@@ -265,9 +270,9 @@ class UiTask : public FpsControlTask {
             constexpr PlotConfig plotPressure = {
                 .axisYIndex = 1,
                 .color = {
-                    r: 0,
-                    g: 0,
-                    b: 200,
+                    r: 100,
+                    g: 200,
+                    b:   0,
                 },
             };
             constexpr PlotConfig plotGas = {
@@ -282,8 +287,8 @@ class UiTask : public FpsControlTask {
                 .axisYIndex = 0,
                 .color = {
                     r: 100,
-                    g: 200,
-                    b: 0,
+                    g: 0,
+                    b: 100,
                 },
             };
             
