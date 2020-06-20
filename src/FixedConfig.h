@@ -7,6 +7,8 @@
  * @brief コンパイル時に設定が必要な定数群です
  */
 namespace FixedConfig {
+    static constexpr uint32_t LcdWidth                 = 320;           /**< LCD横幅 */
+    static constexpr uint32_t LcdHeight                = 240;           /**< LCD高さ */
     static constexpr uint8_t  Bme680SlaveAddr          = 0x76;          /**< BME680のSlave Addr */
     static constexpr uint32_t WaitForPorMs             = 1000;          /**< POR後の待機時間 */
     static constexpr uint32_t SerialBaudrate           = 115200;        /**< UART baudrate */
@@ -20,7 +22,7 @@ namespace FixedConfig {
     static constexpr size_t   ButtonTaskStackSize      = 256;           /**< ButtonTaskのStackSize */
     static constexpr size_t   UiTaskStackSize          = 2048;          /**< UiTaskのStackSize */
     static constexpr size_t   wifiTaskStackSize        = 2048;          /**< UiTaskのStackSize */
-    static constexpr uint32_t WaitForDebugPrintMs      = 4096;          /**< Task開始直前の待機時間 */
+    static constexpr uint32_t WaitForDebugPrintMs      = 3000;          /**< Task開始直前の待機時間 */
     static constexpr char*    GroveTaskPrintFilePath   = "sensor.csv";  /**< GroveTaskでファイル記録を有効化した場合の保存先 */
     static constexpr size_t   ButtonTaskDebounceNum    = 2;             /**< ButtonTaskで保持する履歴数 */
     static constexpr size_t   UiTaskBrightnessKeyPoint = 4;             /**< 画面自動調光の設定KeyPoint数 */

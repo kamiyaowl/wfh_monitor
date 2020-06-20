@@ -12,6 +12,7 @@
 
 #include "control/BrightnessControl.h"
 #include "control/PeriodicTrigger.h"
+#include "control/Chart.h"
 
 /**
  * @brief UserInterfaceの表示を行うタスクです
@@ -29,7 +30,6 @@ class UiTask : public FpsControlTask {
          * @param sendWifiReqQueue Wifi関係の要求Queue
          * @param recvWifiRespQueue Wifi関係の応答Queue
          * @param lcd LCD Library、事前にinitは済ませておくこと(Wio Terminalに付随しているため)
-         * @param sprite 
          */
         UiTask(
             const SharedResourceDefs& resource,
@@ -37,15 +37,13 @@ class UiTask : public FpsControlTask {
             IpcQueue<ButtonEventData>& recvButtonStateQueue,
             IpcQueue<WifiTaskRequest>& sendWifiReqQueue,
             IpcQueue<WifiTaskResponse>& recvWifiRespQueue,
-            LGFX& lcd,
-            LGFX_Sprite& sprite
+            LGFX& lcd
         ): resource(resource),           
            recvMeasureDataQueue(recvMeasureDataQueue),
            recvButtonStateQueue(recvButtonStateQueue),
            sendWifiReqQueue(sendWifiReqQueue),
            recvWifiRespQueue(recvWifiRespQueue),
            lcd(lcd),
-           sprite(sprite),
            brightness(lcd) {}
 
         /**
@@ -61,7 +59,6 @@ class UiTask : public FpsControlTask {
         IpcQueue<WifiTaskResponse>& recvWifiRespQueue; /**< Wifi応答  */
         // hw
         LGFX& lcd;
-        LGFX_Sprite& sprite;
         // hw resourceを使って初期化が必要
         BrightnessControl<N, LGFX> brightness;
         // configから読み出し
@@ -71,17 +68,50 @@ class UiTask : public FpsControlTask {
         bool isSendingAmbient; /**< ambientへデータ送信中の場合はtrue, QD=1制御用フラグ */
         bool wasSucceedSendAmbient; /**< 最後にAmbientにデータ送信した結果 */
         uint32_t counter; /**< for debug*/
+        uint32_t lastestDrawChatTimestamp; /**< 最後にchartに書いたデータのtimestamp */
         MeasureData latestMeasureData; /**< 最後に受信した測定データ */
         ButtonEventData latestButtonState; /**< 最後に受信したボタン入力 */
         WifiStatusData latestWifiStatus; /**< 最後に受信したWiFi Status */
         PeriodicTrigger ambientTaskTrigger; /**< Ambient定期送信タスク制御 */
+        Chart chart; /**< センサー値のトレンドグラフ */
 
         void setup(void) override {
             // initialize lcd
-            this->lcd.setTextSize(1);
+            this->lcd.setFont(&Font2);
+
+            // init chart
+            constexpr ChartConfig chartConfig = {
+                .mode = ChartMode::Overwrite,
+                .rect = {
+                    .x      =  10,
+                    .y      =  40,
+                    .width  = 300,
+                    .height = 180,
+                },
+                .axisY0 = {
+                    .min = -10.0f,
+                    .max = 120.0f,
+                },
+                .axisY1 = {
+                    .min =  900.0f,
+                    .max = 1100.0f,
+                },
+                .axisColor = {
+                    .r = 255,
+                    .g = 255,
+                    .b = 255,
+                },
+                .axisTickness = 2,
+                .backColor = {
+                    .r = 10,
+                    .g = 10,
+                    .b = 10,
+                },
+            };
+            this->chart.init(this->lcd, chartConfig);
 
             // configure
-            static constexpr BrightnessSetting brightnessSetting[N] = { // TODO: 設定ファイルから色々できるといいなぁ...
+            static constexpr BrightnessSetting brightnessSetting[N] = {
                 { .visibleLux =  50.0f , .brightness = 20 },
                 { .visibleLux = 120.0f , .brightness = 100 },
                 { .visibleLux = 180.0f , .brightness = 200 },
@@ -110,6 +140,7 @@ class UiTask : public FpsControlTask {
             this->isSendingAmbient = false;
             this->wasSucceedSendAmbient = false;
             this->counter = 0x0;
+            this->lastestDrawChatTimestamp = 0x0;
             this->latestMeasureData.visibleLux = 0.0f;
             this->latestMeasureData.tempature = 0.0f;
             this->latestMeasureData.pressure = 0.0f;
@@ -133,8 +164,9 @@ class UiTask : public FpsControlTask {
             } else {
                 this->ambientTaskTrigger.stop(); // 念の為
             }
+
         }
-        
+
         bool loop(void) override {
             // receive datas
             const bool isUpdated = this->receiveDatas();
@@ -161,7 +193,15 @@ class UiTask : public FpsControlTask {
             });
 
             // ui update
-            this->drawDebugPrint();
+            this->drawChart(this->lcd);
+            this->lcd.setTextSize(2);
+            this->lcd.setCursor(0, 0);
+            this->lcd.setTextColor(this->lcd.color888(200, 100, 0), 0x000000);
+            this->lcd.printf("%2.1fC ", this->latestMeasureData.tempature);
+            this->lcd.setTextColor(this->lcd.color888(  0, 100, 200), 0x000000);
+            this->lcd.printf("%2.1f%% ", this->latestMeasureData.humidity);
+            this->lcd.setTextColor(this->lcd.color888(100, 200,   0), 0x000000);
+            this->lcd.printf("%2.1fhPa", this->latestMeasureData.pressure);
 
             // for debug
             this->counter++;
@@ -208,44 +248,104 @@ class UiTask : public FpsControlTask {
         }
 
         /**
+         * @brief グラフを描画します
+         */
+        void drawChart(LovyanGFX& drawDst) {
+            constexpr PlotConfig plotTemp = {
+                .axisYIndex = 0,
+                .color = {
+                    r: 200,
+                    g: 100,
+                    b: 0,
+                },
+            };
+            constexpr PlotConfig plotHumi = {
+                .axisYIndex = 0,
+                .color = {
+                    r: 0,
+                    g: 100,
+                    b: 200,
+                },
+            };
+            constexpr PlotConfig plotPressure = {
+                .axisYIndex = 1,
+                .color = {
+                    r: 100,
+                    g: 200,
+                    b:   0,
+                },
+            };
+            constexpr PlotConfig plotGas = {
+                .axisYIndex = 0,
+                .color = {
+                    r: 100,
+                    g: 100,
+                    b: 0,
+                },
+            };
+            constexpr PlotConfig plotVisibleLux = {
+                .axisYIndex = 0,
+                .color = {
+                    r: 100,
+                    g: 0,
+                    b: 100,
+                },
+            };
+            
+            // データが更新されてたときのみ
+            if (this->lastestDrawChatTimestamp == this->latestMeasureData.timestamp) {
+                return;
+            }
+            this->lastestDrawChatTimestamp = this->latestMeasureData.timestamp;
+
+            // データを更新
+            this->chart.plot(this->lcd, this->latestMeasureData.tempature  , plotTemp);
+            this->chart.plot(this->lcd, this->latestMeasureData.humidity   , plotHumi);
+            this->chart.plot(this->lcd, this->latestMeasureData.pressure   , plotPressure);
+            this->chart.plot(this->lcd, this->latestMeasureData.gas        , plotGas);
+            this->chart.plot(this->lcd, this->latestMeasureData.visibleLux , plotVisibleLux);
+            this->chart.next(this->lcd); // X座標を勧めておく
+        }
+
+        /**
          * @brief LCDに現在の値を表示します。飾り気がないです
          */
-        void drawDebugPrint(void) {
-            this->lcd.setCursor(0,0);
-            this->lcd.printf("#UiTask\n");
-            this->lcd.printf("systick = %d\n", SysTimer::getTickCount());
-            this->lcd.printf("counter = %d\n", this->counter);
-            this->lcd.printf("maxFps  = %f\n", this->getFpsWithoutDelay());
-            this->lcd.printf("\n");
+        void drawDebugPrint(LovyanGFX& drawDst) {
+            drawDst.setCursor(0, 0);
+            drawDst.printf("#UiTask\n");
+            drawDst.printf("systick = %d\n", SysTimer::getTickCount());
+            drawDst.printf("counter = %d\n", this->counter);
+            drawDst.printf("maxFps  = %f\n", this->getFpsWithoutDelay());
+            drawDst.printf("\n");
 
-            this->lcd.printf("#SensorData\n");
-            this->lcd.printf("visibleLux = %f\n", this->latestMeasureData.visibleLux);
-            this->lcd.printf("tempature  = %f\n", this->latestMeasureData.tempature);
-            this->lcd.printf("pressure   = %f\n", this->latestMeasureData.pressure);
-            this->lcd.printf("humidity   = %f\n", this->latestMeasureData.humidity);
-            this->lcd.printf("gas        = %f\n", this->latestMeasureData.gas);
-            this->lcd.printf("timestamp  = %u\n", this->latestMeasureData.timestamp);
-            this->lcd.printf("\n");
+            drawDst.printf("#SensorData\n");
+            drawDst.printf("visibleLux = %f\n", this->latestMeasureData.visibleLux);
+            drawDst.printf("tempature  = %f\n", this->latestMeasureData.tempature);
+            drawDst.printf("pressure   = %f\n", this->latestMeasureData.pressure);
+            drawDst.printf("humidity   = %f\n", this->latestMeasureData.humidity);
+            drawDst.printf("gas        = %f\n", this->latestMeasureData.gas);
+            drawDst.printf("timestamp  = %u\n", this->latestMeasureData.timestamp);
+            drawDst.printf("\n");
 
-            this->lcd.printf("#Button\n");
-            this->lcd.printf("raw       = %08x\n", this->latestButtonState.raw);
-            this->lcd.printf("debounce  = %08x\n", this->latestButtonState.debounce);
-            this->lcd.printf("push      = %08x\n", this->latestButtonState.push);
-            this->lcd.printf("release   = %08x\n", this->latestButtonState.release);
-            this->lcd.printf("timestamp = %u\n"  , this->latestButtonState.timestamp);
-            this->lcd.printf("\n");
+            drawDst.printf("#Button\n");
+            drawDst.printf("raw       = %08x\n", this->latestButtonState.raw);
+            drawDst.printf("debounce  = %08x\n", this->latestButtonState.debounce);
+            drawDst.printf("push      = %08x\n", this->latestButtonState.push);
+            drawDst.printf("release   = %08x\n", this->latestButtonState.release);
+            drawDst.printf("timestamp = %u\n"  , this->latestButtonState.timestamp);
+            drawDst.printf("\n");
 
-            this->lcd.printf("#Wifi\n");
-            this->lcd.printf("status    = %d\n"         , this->latestWifiStatus.status);
-            this->lcd.printf("ipAddr    = %d.%d.%d.%d\n", this->latestWifiStatus.ipAddr[0], this->latestWifiStatus.ipAddr[1], this->latestWifiStatus.ipAddr[2], this->latestWifiStatus.ipAddr[3]);
-            this->lcd.printf("timestamp = %u\n"         , this->latestWifiStatus.timestamp);
-            this->lcd.printf("\n");
+            drawDst.printf("#Wifi\n");
+            drawDst.printf("status    = %d\n"         , this->latestWifiStatus.status);
+            drawDst.printf("ipAddr    = %d.%d.%d.%d\n", this->latestWifiStatus.ipAddr[0], this->latestWifiStatus.ipAddr[1], this->latestWifiStatus.ipAddr[2], this->latestWifiStatus.ipAddr[3]);
+            drawDst.printf("timestamp = %u\n"         , this->latestWifiStatus.timestamp);
+            drawDst.printf("\n");
 
-            this->lcd.printf("#Ambient\n");
-            this->lcd.printf("use     = %d\n"         , this->isUseAmbient);
-            this->lcd.printf("sending = %d\n"         , this->isSendingAmbient);
-            this->lcd.printf("result  = %d\n"         , this->wasSucceedSendAmbient);
-            this->lcd.printf("\n");
+            drawDst.printf("#Ambient\n");
+            drawDst.printf("use     = %d\n"         , this->isUseAmbient);
+            drawDst.printf("sending = %d\n"         , this->isSendingAmbient);
+            drawDst.printf("result  = %d\n"         , this->wasSucceedSendAmbient);
+            drawDst.printf("\n");
         }
 };
 
