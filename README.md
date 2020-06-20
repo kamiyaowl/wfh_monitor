@@ -6,8 +6,7 @@
 
 おうち環境モニター
 
-
-TODO: 写真
+![img](https://user-images.githubusercontent.com/4300987/85192566-f11e8280-b2fd-11ea-93d2-34642bd1be2a.jpg)
 
 ## 機能
 
@@ -39,7 +38,7 @@ TODO: 写真
 
 ## 接続方法
 
-TODO:
+Wio Terminal 画面左下のGrove Connector に I2C Hub を接続し、 I2C Hub の Grove Connector に BME680 と TSL2561 を接続します。
 
 ## 書き込み方法
 
@@ -49,10 +48,6 @@ TODO:
     * 方法は[Get Started with Wio Terminal - Seeed Wiki](https://wiki.seeedstudio.com/Wio-Terminal-Getting-Started/#getting-started)を参照。
 3. PCに接続するとArduinoのストレージデバイスが見えるので、`wfh_monitor.ino.Seeeduino.samd.seeed_wio_terminal.uf2`をドライブ上にコピーします
 4. 無事に起動したら完了
-
-## 操作説明
-
-TODO:
 
 ## 設定ファイル
 
