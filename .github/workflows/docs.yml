@@ -12,6 +12,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - run: git submodule update --init --recursive
+    - run: docker-compose build
     - run: docker-compose run docs
     - uses: actions/upload-artifact@v2
       with:
