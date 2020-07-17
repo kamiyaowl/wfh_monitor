@@ -6,7 +6,7 @@
 
 おうち環境モニター
 
-![img](https://user-images.githubusercontent.com/4300987/85192566-f11e8280-b2fd-11ea-93d2-34642bd1be2a.jpg)
+![img](https://user-images.githubusercontent.com/4300987/87805396-38157e80-c890-11ea-80e4-e0bc6b6885ee.jpg)
 
 ## 機能
 
