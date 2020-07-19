@@ -5,7 +5,7 @@ ENV DEBIAN_FRONTEND noninteractive
 RUN apt-get update && apt-get install -y doxygen graphviz git
 
 # create work directory
-RUN mkdir /work
-WORKDIR /work
+RUN mkdir /wfh_monitor
+WORKDIR /wfh_monitor
 
 CMD ["/bin/sh"]
