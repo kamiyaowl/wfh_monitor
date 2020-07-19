@@ -17,4 +17,4 @@ jobs:
     - uses: actions/upload-artifact@v2
       with:
         name: wfh_monitor.zip
-        path: wfh_monitor.ino.Seeeduino.samd.seeed_wio_terminal.*
+        path: wfh_monitor.ino.uf2

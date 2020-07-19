@@ -128,14 +128,16 @@ dmypy.json
 .pyre/
 
 # build binary
-*.bin
-*.elf
+*.ino.bin
+*.ino.elf
+*.ino.hex
+*.ino.map
+*.ino.uf2
+
+cache/
+sketch/
 bazel-*
-wfh_monitor.ino.Seeeduino.samd.seeed_wio_terminal.uf2
 
 # doxygen
 html
 latex
-
-# build cache
-cache
