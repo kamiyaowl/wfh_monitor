@@ -20,7 +20,7 @@ RUN arduino-cli core install Seeeduino:samd@1.7.6 --additional-urls https://file
 RUN arduino-cli core list
 
 # create work directory
-RUN mkdir /work
-WORKDIR /work
+RUN mkdir /wfh_monitor
+WORKDIR /wfh_monitor
 
 CMD ["/bin/sh"]

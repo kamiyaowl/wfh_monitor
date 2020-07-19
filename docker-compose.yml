@@ -6,7 +6,7 @@ services:
         context: .
         dockerfile: arduino-cli.Dockerfile
       volumes:
-        - ./:/work
+        - ./:/wfh_monitor
         - ./lib:/root/Arduino/libraries:ro
       command: >
         bash -c "chmod +x ./build.sh && ./build.sh"
@@ -15,7 +15,7 @@ services:
         context: .
         dockerfile: arduino-cli.Dockerfile
       volumes:
-        - ./:/work
+        - ./:/wfh_monitor
         - ./lib:/root/Arduino/libraries:ro
       devices: 
         - /dev/ttyS10:/dev/ttyTarget # ttyS10を自分のターゲットに置き換える
@@ -26,6 +26,6 @@ services:
         context: .
         dockerfile: ./doxygen.Dockerfile
       volumes:
-        - ./:/work
+        - ./:/wfh_monitor
         - ./lib:/root/Arduino/libraries:ro
       command: doxygen
