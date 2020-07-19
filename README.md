@@ -46,7 +46,7 @@ Wio Terminal 画面左下のGrove Connector に I2C Hub を接続し、 I2C Hub 
 1. [Build - Github Actions](https://github.com/kamiyaowl/wfh_monitor/actions?query=workflow%3ABuild)からビルド済バイナリをダウンロードします。
 2. Bootloaderモードで起動します
     * 方法は[Get Started with Wio Terminal - Seeed Wiki](https://wiki.seeedstudio.com/Wio-Terminal-Getting-Started/#getting-started)を参照。
-3. PCに接続するとArduinoのストレージデバイスが見えるので、`wfh_monitor.ino.Seeeduino.samd.seeed_wio_terminal.uf2`をドライブ上にコピーします
+3. PCに接続するとArduinoのストレージデバイスが見えるので、`wfh_monitor.ino.uf2`をドライブ上にコピーします
 4. 無事に起動したら完了
 
 ## 設定ファイル
